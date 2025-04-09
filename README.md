@@ -1,4 +1,4 @@
-# Bank System  - OOP Project
+# Pet Service - By Quyền
 # Installation
 ## 1. Clone the repository
 ```bash
