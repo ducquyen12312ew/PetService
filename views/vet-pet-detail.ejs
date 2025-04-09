@@ -1,0 +1,472 @@
+<!-- views/vet-pet-detail.ejs -->
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chi tiết thú cưng - <%= pet.name %></title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body {
+            background-color: #ffffff;
+            color: #333;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        .vet-sidebar {
+            background-color: #343a40;
+            color: #fff;
+            min-height: 100vh;
+            padding-top: 15px;
+        }
+        .vet-sidebar .nav-link {
+            color: rgba(255, 255, 255, 0.75);
+            padding: 10px 20px;
+            border-radius: 0;
+            margin-bottom: 5px;
+        }
+        .vet-sidebar .nav-link:hover, .vet-sidebar .nav-link.active {
+            color: #fff;
+            background-color: rgba(255, 255, 255, 0.1);
+        }
+        .vet-sidebar .nav-link i {
+            margin-right: 10px;
+            width: 20px;
+            text-align: center;
+        }
+        .content-wrapper {
+            padding: 20px;
+        }
+        .pet-profile {
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            margin-bottom: 20px;
+            overflow: hidden;
+        }
+        .profile-header {
+            background-color: #f7c800;
+            color: white;
+            padding: 20px;
+        }
+        .profile-icon {
+            font-size: 60px;
+            margin-bottom: 15px;
+        }
+        .profile-name {
+            font-size: 28px;
+            font-weight: 700;
+            margin-bottom: 5px;
+        }
+        .profile-type {
+            font-size: 18px;
+            opacity: 0.9;
+        }
+        .profile-detail {
+            padding: 20px;
+        }
+        .detail-title {
+            font-weight: 600;
+            color: #555;
+            margin-bottom: 3px;
+        }
+        .detail-value {
+            margin-bottom: 12px;
+        }
+        .nav-tabs {
+            margin-bottom: 20px;
+        }
+        .nav-tabs .nav-link {
+            color: #555;
+            font-weight: 500;
+        }
+        .nav-tabs .nav-link.active {
+            color: #f7c800;
+            font-weight: 600;
+            border-bottom: 2px solid #f7c800;
+        }
+        .record-card {
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            margin-bottom: 15px;
+            border-left: 4px solid #f7c800;
+        }
+        .record-header {
+            padding: 12px 15px;
+            border-bottom: 1px solid #eee;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .record-date {
+            font-weight: 600;
+            color: #333;
+        }
+        .record-body {
+            padding: 15px;
+        }
+        .btn-yellow {
+            background-color: #f7c800;
+            color: white;
+            border: none;
+        }
+        .btn-yellow:hover {
+            background-color: #e6b800;
+            color: white;
+        }
+        .status-badge {
+            padding: 5px 10px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+        .status-healthy {
+            background-color: #28a745;
+            color: white;
+        }
+        .status-sick {
+            background-color: #dc3545;
+            color: white;
+        }
+        .status-recovering {
+            background-color: #ffc107;
+            color: #333;
+        }
+        .status-critical {
+            background-color: #dc3545;
+            color: white;
+        }
+        .tab-pane {
+            padding-top: 15px;
+        }
+        .med-item {
+            background-color: #f8f9fa;
+            border-radius: 8px;
+            padding: 10px 15px;
+            margin-bottom: 10px;
+        }
+        .med-name {
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 5px;
+        }
+        .med-detail {
+            font-size: 14px;
+            color: #555;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container-fluid">
+    <div class="row">
+        <!-- Sidebar -->
+        <div class="col-md-3 col-lg-2 d-md-block vet-sidebar collapse">
+            <div class="text-center mb-4 pt-3">
+                <i class="fas fa-user-md fa-3x mb-2"></i>
+                <h5><%= user.name %></h5>
+                <small>Bác sĩ thú y</small>
+            </div>
+            <hr>
+            <ul class="nav flex-column">
+                <li class="nav-item">
+                    <a class="nav-link" href="/vet/dashboard">
+                        <i class="fas fa-tachometer-alt"></i> Dashboard
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link active" href="/vet/pets">
+                        <i class="fas fa-paw"></i> Thú cưng
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="/vet/appointments">
+                        <i class="fas fa-calendar-check"></i> Lịch hẹn
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="/vet/prescriptions">
+                        <i class="fas fa-prescription-bottle-alt"></i> Đơn thuốc
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="/vet/medical-records">
+                        <i class="fas fa-notes-medical"></i> Bệnh án
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="/logout">
+                        <i class="fas fa-sign-out-alt"></i> Đăng xuất
+                    </a>
+                </li>
+            </ul>
+        </div>
+
+        <!-- Main Content -->
+        <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4 content-wrapper">
+            <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+                <h1 class="h2">Hồ sơ thú cưng</h1>
+                <div class="btn-toolbar mb-2 mb-md-0">
+                    <a href="/vet/pets" class="btn btn-sm btn-outline-secondary me-2">
+                        <i class="fas fa-arrow-left me-1"></i> Quay lại
+                    </a>
+                </div>
+            </div>
+
+            <div class="row">
+                <!-- Pet Profile Information -->
+                <div class="col-md-4">
+                    <div class="pet-profile">
+                        <div class="profile-header text-center">
+                            <div class="profile-icon">
+                                <% if (pet.type.toLowerCase() === 'dog') { %>
+                                    <i class="fas fa-dog"></i>
+                                <% } else if (pet.type.toLowerCase() === 'cat') { %>
+                                    <i class="fas fa-cat"></i>
+                                <% } else { %>
+                                    <i class="fas fa-paw"></i>
+                                <% } %>
+                            </div>
+                            <div class="profile-name"><%= pet.name %></div>
+                            <div class="profile-type"><%= pet.type %> - <%= pet.breed || 'Không xác định' %></div>
+                        </div>
+                        <div class="profile-detail">
+                            <div class="detail-title">Chủ nhân</div>
+                            <div class="detail-value"><%= pet.ownerName %></div>
+                            
+                            <div class="detail-title">Liên hệ</div>
+                            <div class="detail-value"><%= pet.ownerPhone %> <br> <%= pet.ownerEmail || 'Không có email' %></div>
+                            
+                            <div class="detail-title">Tuổi</div>
+                            <div class="detail-value"><%= pet.age || 'Chưa xác định' %></div>
+                            
+                            <div class="detail-title">Cân nặng</div>
+                            <div class="detail-value"><%= pet.weight ? pet.weight + ' kg' : 'Chưa xác định' %></div>
+                            
+                            <div class="detail-title">Giới tính</div>
+                            <div class="detail-value">
+                                <% if (pet.gender === 'male') { %>Đực<% } else if (pet.gender === 'female') { %>Cái<% } else { %>Chưa xác định<% } %>
+                            </div>
+                            
+                            <div class="detail-title">Ngày đăng ký</div>
+                            <div class="detail-value"><%= new Date(pet.registeredAt).toLocaleDateString('vi-VN') %></div>
+                            
+                            <div class="mt-4">
+                                <button class="btn btn-sm btn-outline-secondary me-2">
+                                    <i class="fas fa-edit me-1"></i> Chỉnh sửa
+                                </button>
+                                <button class="btn btn-sm btn-outline-danger">
+                                    <i class="fas fa-print me-1"></i> In hồ sơ
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Quick Actions -->
+                    <div class="d-grid gap-2 mb-4">
+                        <a href="/vet/pets/<%= pet._id %>/health" class="btn btn-yellow">
+                            <i class="fas fa-heartbeat me-1"></i> Cập nhật hồ sơ sức khỏe
+                        </a>
+                        <a href="/vet/pets/<%= pet._id %>/medical" class="btn btn-outline-secondary">
+                            <i class="fas fa-stethoscope me-1"></i> Tạo bệnh án mới
+                        </a>
+                        <a href="/vet/pets/<%= pet._id %>/prescription" class="btn btn-outline-secondary">
+                            <i class="fas fa-prescription-bottle-alt me-1"></i> Kê đơn thuốc
+                        </a>
+                    </div>
+                </div>
+                
+                <!-- Medical Records Tabs -->
+                <div class="col-md-8">
+                    <ul class="nav nav-tabs" id="petTabs" role="tablist">
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link active" id="health-tab" data-bs-toggle="tab" data-bs-target="#health" type="button" role="tab" aria-controls="health" aria-selected="true">
+                                <i class="fas fa-heartbeat me-1"></i> Sức khỏe
+                            </button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link" id="medical-tab" data-bs-toggle="tab" data-bs-target="#medical" type="button" role="tab" aria-controls="medical" aria-selected="false">
+                                <i class="fas fa-stethoscope me-1"></i> Bệnh án
+                            </button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link" id="prescriptions-tab" data-bs-toggle="tab" data-bs-target="#prescriptions" type="button" role="tab" aria-controls="prescriptions" aria-selected="false">
+                                <i class="fas fa-prescription-bottle-alt me-1"></i> Đơn thuốc
+                            </button>
+                        </li>
+                    </ul>
+                    
+                    <div class="tab-content" id="petTabsContent">
+                        <!-- Health Records Tab -->
+                        <div class="tab-pane fade show active" id="health" role="tabpanel" aria-labelledby="health-tab">
+                            <% if (healthRecords && healthRecords.length > 0) { %>
+                                <% healthRecords.forEach(record => { %>
+                                    <div class="record-card">
+                                        <div class="record-header">
+                                            <div class="record-date"><%= new Date(record.date).toLocaleDateString('vi-VN') %></div>
+                                            <div>
+                                                <span class="status-badge 
+                                                    <%= record.status === 'healthy' ? 'status-healthy' : 
+                                                    record.status === 'sick' ? 'status-sick' : 
+                                                    record.status === 'recovering' ? 'status-recovering' : 
+                                                    'status-critical' %>">
+                                                    <%= record.status === 'healthy' ? 'Khỏe mạnh' : 
+                                                    record.status === 'sick' ? 'Đang bệnh' : 
+                                                    record.status === 'recovering' ? 'Đang hồi phục' : 
+                                                    'Nguy kịch' %>
+                                                </span>
+                                            </div>
+                                        </div>
+                                        <div class="record-body">
+                                            <div class="row">
+                                                <div class="col-md-6">
+                                                    <p><strong>Nhiệt độ:</strong> <%= record.temperature || 'N/A' %> °C</p>
+                                                    <p><strong>Cân nặng:</strong> <%= record.weight || 'N/A' %> kg</p>
+                                                </div>
+                                                <div class="col-md-6">
+                                                    <p><strong>Nhịp tim:</strong> <%= record.heartRate || 'N/A' %> bpm</p>
+                                                    <p><strong>Nhịp thở:</strong> <%= record.respirationRate || 'N/A' %> bpm</p>
+                                                </div>
+                                            </div>
+                                            <% if (record.notes) { %>
+                                                <div class="mt-2">
+                                                    <strong>Ghi chú:</strong>
+                                                    <p><%= record.notes %></p>
+                                                </div>
+                                            <% } %>
+                                            <% if (record.nextCheckupDate) { %>
+                                                <div class="mt-2">
+                                                    <strong>Ngày tái khám:</strong> <%= new Date(record.nextCheckupDate).toLocaleDateString('vi-VN') %>
+                                                </div>
+                                            <% } %>
+                                        </div>
+                                    </div>
+                                <% }) %>
+                            <% } else { %>
+                                <div class="alert alert-info">
+                                    <i class="fas fa-info-circle me-2"></i> Chưa có thông tin sức khỏe nào được ghi nhận.
+                                </div>
+                            <% } %>
+                        </div>
+                        
+                        <!-- Medical Records Tab -->
+                        <div class="tab-pane fade" id="medical" role="tabpanel" aria-labelledby="medical-tab">
+                            <% if (medicalRecords && medicalRecords.length > 0) { %>
+                                <% medicalRecords.forEach(record => { %>
+                                    <div class="record-card">
+                                        <div class="record-header">
+                                            <div class="record-date"><%= new Date(record.date).toLocaleDateString('vi-VN') %></div>
+                                        </div>
+                                        <div class="record-body">
+                                            <% if (record.symptoms && record.symptoms.length > 0) { %>
+                                                <div class="mb-3">
+                                                    <strong>Triệu chứng:</strong>
+                                                    <ul>
+                                                        <% record.symptoms.forEach(symptom => { %>
+                                                            <li><%= symptom %></li>
+                                                        <% }) %>
+                                                    </ul>
+                                                </div>
+                                            <% } %>
+                                            
+                                            <div class="mb-3">
+                                                <strong>Chẩn đoán:</strong>
+                                                <p><%= record.diagnosis || 'Không có thông tin' %></p>
+                                            </div>
+                                            
+                                            <div class="mb-3">
+                                                <strong>Điều trị:</strong>
+                                                <p><%= record.treatment || 'Không có thông tin' %></p>
+                                            </div>
+                                            
+                                            <% if (record.notes) { %>
+                                                <div class="mb-3">
+                                                    <strong>Ghi chú:</strong>
+                                                    <p><%= record.notes %></p>
+                                                </div>
+                                            <% } %>
+                                            
+                                            <% if (record.followUpDate) { %>
+                                                <div>
+                                                    <strong>Ngày tái khám:</strong> <%= new Date(record.followUpDate).toLocaleDateString('vi-VN') %>
+                                                </div>
+                                            <% } %>
+                                        </div>
+                                    </div>
+                                <% }) %>
+                            <% } else { %>
+                                <div class="alert alert-info">
+                                    <i class="fas fa-info-circle me-2"></i> Chưa có bệnh án nào được ghi nhận.
+                                </div>
+                            <% } %>
+                        </div>
+                        
+                        <!-- Prescriptions Tab -->
+                        <div class="tab-pane fade" id="prescriptions" role="tabpanel" aria-labelledby="prescriptions-tab">
+                            <% if (prescriptions && prescriptions.length > 0) { %>
+                                <% prescriptions.forEach(prescription => { %>
+                                    <div class="record-card">
+                                        <div class="record-header">
+                                            <div class="record-date"><%= new Date(prescription.date).toLocaleDateString('vi-VN') %></div>
+                                            <div>
+                                                <span class="status-badge <%= prescription.status === 'active' ? 'status-healthy' : 'status-sick' %>">
+                                                    <%= prescription.status === 'active' ? 'Đang dùng' : prescription.status === 'completed' ? 'Hoàn thành' : 'Đã hủy' %>
+                                                </span>
+                                            </div>
+                                        </div>
+                                        <div class="record-body">
+                                            <div class="mb-3">
+                                                <strong>Các thuốc đã kê:</strong>
+                                                <% if (prescription.medications && prescription.medications.length > 0) { %>
+                                                    <% prescription.medications.forEach(med => { %>
+                                                        <div class="med-item">
+                                                            <div class="med-name"><%= med.name %></div>
+                                                            <div class="med-detail">
+                                                                <span class="me-3"><strong>Liều lượng:</strong> <%= med.dosage %></span>
+                                                                <span class="me-3"><strong>Tần suất:</strong> <%= med.frequency %></span>
+                                                                <span><strong>Thời gian:</strong> <%= med.duration %></span>
+                                                            </div>
+                                                            <% if (med.notes) { %>
+                                                                <div class="med-detail mt-1">
+                                                                    <strong>Ghi chú:</strong> <%= med.notes %>
+                                                                </div>
+                                                            <% } %>
+                                                        </div>
+                                                    <% }) %>
+                                                <% } else { %>
+                                                    <p>Không có thuốc nào được kê</p>
+                                                <% } %>
+                                            </div>
+                                            
+                                            <% if (prescription.instructions) { %>
+                                                <div>
+                                                    <strong>Hướng dẫn:</strong>
+                                                    <p><%= prescription.instructions %></p>
+                                                </div>
+                                            <% } %>
+                                            
+                                            <div class="mt-3 text-end">
+                                                <button class="btn btn-sm btn-outline-secondary">
+                                                    <i class="fas fa-print me-1"></i> In đơn thuốc
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                <% }) %>
+                            <% } else { %>
+                                <div class="alert alert-info">
+                                    <i class="fas fa-info-circle me-2"></i> Chưa có đơn thuốc nào được kê.
+                                </div>
+                            <% } %>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

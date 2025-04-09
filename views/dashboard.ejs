@@ -1,0 +1,300 @@
+<!-- views/dashboard.ejs -->
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Trang cá nhân</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body {
+            background-color: #f8f9fa;
+        }
+        .dashboard-section {
+            background-color: white;
+            border-radius: 10px;
+            box-shadow: 0 0 15px rgba(0, 0, 0, 0.05);
+            margin-bottom: 30px;
+            padding: 25px;
+        }
+        .pet-card {
+            transition: transform 0.3s;
+            margin-bottom: 20px;
+        }
+        .pet-card:hover {
+            transform: translateY(-5px);
+        }
+        .admin-btn {
+            position: fixed;
+            bottom: 10px;
+            right: 10px;
+            width: 10px;
+            height: 10px;
+            background-color: transparent;
+            border: none;
+            cursor: default;
+            z-index: 999;
+        }
+    </style>
+</head>
+<body>
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+        <div class="container">
+            <a class="navbar-brand" href="/">
+                <i class="fas fa-paw me-2"></i>Pet Care Center
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav me-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="/">Trang chủ</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/services">Dịch vụ</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/appointment">Đặt lịch khám</a>
+                    </li>
+                </ul>
+                <div class="d-flex">
+                    <a href="/user/dashboard" class="btn btn-light me-2">
+                        <i class="fas fa-user-circle me-1"></i><%= user.name %>
+                    </a>
+                    <a href="/logout" class="btn btn-outline-light">Đăng xuất</a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container py-5">
+        <div class="row mb-4">
+            <div class="col">
+                <h2><i class="fas fa-user-circle me-2"></i>Trang cá nhân</h2>
+                <p class="text-muted">Quản lý thông tin thú cưng và lịch hẹn dịch vụ</p>
+            </div>
+            <div class="col-auto">
+                <a href="/appointment" class="btn btn-primary">
+                    <i class="fas fa-calendar-plus me-2"></i>Đặt lịch mới
+                </a>
+            </div>
+        </div>
+
+        <div class="row">
+            <!-- Thông tin tài khoản -->
+            <div class="col-lg-4 mb-4">
+                <div class="dashboard-section h-100">
+                    <div class="d-flex justify-content-between align-items-center mb-4">
+                        <h4><i class="fas fa-user me-2"></i>Thông tin tài khoản</h4>
+                        <a href="#" class="btn btn-sm btn-outline-primary">Chỉnh sửa</a>
+                    </div>
+                    <div class="text-center mb-4">
+                        <div class="display-1 text-primary mb-3">
+                            <i class="fas fa-user-circle"></i>
+                        </div>
+                        <h5><%= user.name %></h5>
+                    </div>
+                    <ul class="list-group list-group-flush">
+                        <li class="list-group-item px-0 d-flex justify-content-between">
+                            <span><i class="fas fa-envelope me-2"></i>Email:</span>
+                            <span class="text-muted">user@example.com</span>
+                        </li>
+                        <li class="list-group-item px-0 d-flex justify-content-between">
+                            <span><i class="fas fa-phone me-2"></i>Số điện thoại:</span>
+                            <span class="text-muted">0123-456-789</span>
+                        </li>
+                        <li class="list-group-item px-0 d-flex justify-content-between">
+                            <span><i class="fas fa-paw me-2"></i>Số thú cưng:</span>
+                            <span class="badge bg-primary"><%= pets.length %></span>
+                        </li>
+                        <li class="list-group-item px-0 d-flex justify-content-between">
+                            <span><i class="fas fa-calendar-check me-2"></i>Lịch hẹn:</span>
+                            <span class="badge bg-info"><%= appointments.length %></span>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Thú cưng -->
+            <div class="col-lg-8 mb-4">
+                <div class="dashboard-section">
+                    <div class="d-flex justify-content-between align-items-center mb-4">
+                        <h4><i class="fas fa-paw me-2"></i>Thú cưng của bạn</h4>
+                        <a href="/pets/add" class="btn btn-sm btn-success">
+                            <i class="fas fa-plus me-1"></i>Thêm thú cưng
+                        </a>
+                    </div>
+
+                    <% if (pets.length === 0) { %>
+                        <div class="alert alert-info">
+                            <i class="fas fa-info-circle me-2"></i>Bạn chưa có thú cưng nào. Hãy thêm thú cưng để sử dụng dịch vụ!
+                        </div>
+                    <% } else { %>
+                        <div class="row">
+                            <% pets.forEach(pet => { %>
+                                <div class="col-md-6">
+                                    <div class="card pet-card">
+                                        <div class="card-body">
+                                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                                <h5 class="card-title mb-0"><%= pet.name %></h5>
+                                                <span class="badge bg-<%= pet.healthStatus === 'Normal' ? 'success' : 'warning' %>">
+                                                    <%= pet.healthStatus %>
+                                                </span>
+                                            </div>
+                                            <div class="mb-3">
+                                                <% if (pet.type === 'dog') { %>
+                                                    <i class="fas fa-dog text-primary fa-2x"></i>
+                                                <% } else if (pet.type === 'cat') { %>
+                                                    <i class="fas fa-cat text-primary fa-2x"></i>
+                                                <% } else { %>
+                                                    <i class="fas fa-paw text-primary fa-2x"></i>
+                                                <% } %>
+                                            </div>
+                                            <p class="card-text">
+                                                <small class="text-muted">Loại: <%= pet.type %></small><br>
+                                                <small class="text-muted">Giống: <%= pet.breed %></small><br>
+                                                <small class="text-muted">Tuổi: <%= pet.age %> tuổi</small>
+                                            </p>
+                                            <div class="d-flex justify-content-between">
+                                                <a href="/pets/<%= pet._id %>/health" class="btn btn-sm btn-outline-primary">
+                                                    <i class="fas fa-heartbeat me-1"></i>Sức khỏe
+                                                </a>
+                                                <a href="/appointment?petId=<%= pet._id %>" class="btn btn-sm btn-outline-success">
+                                                    <i class="fas fa-calendar-plus me-1"></i>Đặt lịch
+                                                </a>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            <% }) %>
+                        </div>
+                    <% } %>
+                </div>
+            </div>
+
+            <!-- Lịch hẹn sắp tới -->
+            <div class="col-12 mb-4">
+                <div class="dashboard-section">
+                    <div class="d-flex justify-content-between align-items-center mb-4">
+                        <h4><i class="fas fa-calendar-alt me-2"></i>Lịch hẹn sắp tới</h4>
+                        <a href="/appointment" class="btn btn-sm btn-primary">
+                            <i class="fas fa-plus me-1"></i>Đặt lịch mới
+                        </a>
+                    </div>
+
+                    <% if (appointments.length === 0) { %>
+                        <div class="alert alert-info">
+                            <i class="fas fa-info-circle me-2"></i>Bạn chưa có lịch hẹn nào. Hãy đặt lịch để sử dụng dịch vụ!
+                        </div>
+                    <% } else { %>
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>Thú cưng</th>
+                                        <th>Dịch vụ</th>
+                                        <th>Ngày</th>
+                                        <th>Giờ</th>
+                                        <th>Trạng thái</th>
+                                        <th>Thao tác</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <% appointments.forEach(appointment => { %>
+                                        <tr>
+                                            <td>
+                                                <!-- Giả sử pet là object có sẵn trong appointment -->
+                                                <%= appointment.pet ? appointment.pet.name : 'N/A' %>
+                                            </td>
+                                            <td>
+                                                <% if (appointment.service === 'khám sức khỏe') { %>
+                                                    <span class="badge bg-primary">Khám sức khỏe</span>
+                                                <% } else if (appointment.service === 'tắm') { %>
+                                                    <span class="badge bg-info">Tắm</span>
+                                                <% } else if (appointment.service === 'cắt tỉa lông') { %>
+                                                    <span class="badge bg-success">Cắt tỉa lông</span>
+                                                <% } else if (appointment.service === 'lưu trú') { %>
+                                                    <span class="badge bg-warning">Lưu trú</span>
+                                                <% } %>
+                                            </td>
+                                            <td><%= new Date(appointment.date).toLocaleDateString('vi-VN') %></td>
+                                            <td><%= appointment.time %></td>
+                                            <td>
+                                                <% if (appointment.status === 'pending') { %>
+                                                    <span class="badge bg-warning">Chờ xác nhận</span>
+                                                <% } else if (appointment.status === 'confirmed') { %>
+                                                    <span class="badge bg-success">Đã xác nhận</span>
+                                                <% } else if (appointment.status === 'completed') { %>
+                                                    <span class="badge bg-info">Hoàn thành</span>
+                                                <% } else if (appointment.status === 'cancelled') { %>
+                                                    <span class="badge bg-danger">Đã hủy</span>
+                                                <% } %>
+                                            </td>
+                                            <td>
+                                                <a href="#" class="btn btn-sm btn-outline-primary">Chi tiết</a>
+                                                <% if (appointment.status === 'pending' || appointment.status === 'confirmed') { %>
+                                                    <a href="#" class="btn btn-sm btn-outline-danger">Hủy</a>
+                                                <% } %>
+                                            </td>
+                                        </tr>
+                                    <% }) %>
+                                </tbody>
+                            </table>
+                        </div>
+                    <% } %>
+                </div>
+            </div>
+
+            <!-- Lịch sử dịch vụ -->
+            <div class="col-12">
+                <div class="dashboard-section">
+                    <h4 class="mb-4"><i class="fas fa-history me-2"></i>Lịch sử dịch vụ</h4>
+                    
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle me-2"></i>Chưa có lịch sử dịch vụ
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="bg-dark text-white py-4 mt-5">
+        <div class="container">
+            <div class="row">
+                <div class="col-md-4">
+                    <h5>Pet Care Center</h5>
+                    <p>Chăm sóc tốt nhất cho người bạn thân yêu của bạn</p>
+                </div>
+                <div class="col-md-4">
+                    <h5>Liên hệ</h5>
+                    <ul class="list-unstyled">
+                        <li><i class="fas fa-map-marker-alt me-2"></i> 123 Đường ABC, Quận XYZ</li>
+                        <li><i class="fas fa-phone me-2"></i> 0123-456-789</li>
+                        <li><i class="fas fa-envelope me-2"></i> info@petcare.com</li>
+                    </ul>
+                </div>
+                <div class="col-md-4">
+                    <h5>Giờ làm việc</h5>
+                    <ul class="list-unstyled">
+                        <li>Thứ 2 - Thứ 6: 8:00 - 19:00</li>
+                        <li>Thứ 7 - Chủ nhật: 9:00 - 17:00</li>
+                    </ul>
+                </div>
+            </div>
+            <hr>
+            <div class="text-center">
+                <p>&copy; 2025 Pet Care Center. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Hidden Admin Button -->
+    <button onclick="window.location.href='/admin-secret'" class="admin-btn"></button>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

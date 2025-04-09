@@ -1,0 +1,282 @@
+<!-- views/vet-add-medical-record.ejs -->
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tạo bệnh án - <%= pet.name %></title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body {
+            background-color: #ffffff;
+            color: #333;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        .vet-sidebar {
+            background-color: #343a40;
+            color: #fff;
+            min-height: 100vh;
+            padding-top: 15px;
+        }
+        .vet-sidebar .nav-link {
+            color: rgba(255, 255, 255, 0.75);
+            padding: 10px 20px;
+            border-radius: 0;
+            margin-bottom: 5px;
+        }
+        .vet-sidebar .nav-link:hover, .vet-sidebar .nav-link.active {
+            color: #fff;
+            background-color: rgba(255, 255, 255, 0.1);
+        }
+        .vet-sidebar .nav-link i {
+            margin-right: 10px;
+            width: 20px;
+            text-align: center;
+        }
+        .content-wrapper {
+            padding: 20px;
+        }
+        .form-card {
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            padding: 25px;
+            margin-bottom: 20px;
+        }
+        .form-header {
+            margin-bottom: 25px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid #eee;
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        .btn-yellow {
+            background-color: #f7c800;
+            color: white;
+            border: none;
+        }
+        .btn-yellow:hover {
+            background-color: #e6b800;
+            color: white;
+        }
+        .pet-info {
+            padding: 15px;
+            background-color: #f8f9fa;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+        .pet-name {
+            font-weight: 600;
+            font-size: 18px;
+            margin-bottom: 5px;
+        }
+        .pet-details {
+            color: #666;
+            font-size: 14px;
+        }
+        .symptom-badge {
+            display: inline-block;
+            background-color: #e9ecef;
+            color: #333;
+            padding: 5px 10px;
+            border-radius: 20px;
+            margin-right: 5px;
+            margin-bottom: 5px;
+            font-size: 14px;
+        }
+        .symptom-badge .remove-btn {
+            margin-left: 5px;
+            cursor: pointer;
+            color: #666;
+        }
+        .symptom-badge .remove-btn:hover {
+            color: #dc3545;
+        }
+        #symptomsList {
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container-fluid">
+    <div class="row">
+        <!-- Sidebar -->
+        <div class="col-md-3 col-lg-2 d-md-block vet-sidebar collapse">
+            <div class="text-center mb-4 pt-3">
+                <i class="fas fa-user-md fa-3x mb-2"></i>
+                <h5><%= user.name %></h5>
+                <small>Bác sĩ thú y</small>
+            </div>
+            <hr>
+            <ul class="nav flex-column">
+                <li class="nav-item">
+                    <a class="nav-link" href="/vet/dashboard">
+                        <i class="fas fa-tachometer-alt"></i> Dashboard
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link active" href="/vet/pets">
+                        <i class="fas fa-paw"></i> Thú cưng
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="/vet/appointments">
+                        <i class="fas fa-calendar-check"></i> Lịch hẹn
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="/vet/prescriptions">
+                        <i class="fas fa-prescription-bottle-alt"></i> Đơn thuốc
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="/vet/medical-records">
+                        <i class="fas fa-notes-medical"></i> Bệnh án
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="/logout">
+                        <i class="fas fa-sign-out-alt"></i> Đăng xuất
+                    </a>
+                </li>
+            </ul>
+        </div>
+
+        <!-- Main Content -->
+        <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4 content-wrapper">
+            <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+                <h1 class="h2">Tạo bệnh án mới</h1>
+                <div class="btn-toolbar mb-2 mb-md-0">
+                    <a href="/vet/pets/<%= pet._id %>" class="btn btn-sm btn-outline-secondary">
+                        <i class="fas fa-arrow-left me-1"></i> Quay lại
+                    </a>
+                </div>
+            </div>
+            
+            <!-- Pet Info Summary -->
+            <div class="pet-info">
+                <div class="pet-name"><%= pet.name %></div>
+                <div class="pet-details">
+                    <%= pet.type %> - <%= pet.breed || 'Không xác định' %> | 
+                    Chủ nhân: <%= pet.ownerName %> | 
+                    Liên hệ: <%= pet.ownerPhone %>
+                </div>
+            </div>
+
+            <!-- Medical Record Form -->
+            <div class="form-card">
+                <div class="form-header">
+                    <h4><i class="fas fa-stethoscope me-2"></i> Thông tin bệnh án</h4>
+                    <p class="text-muted">Nhập các thông tin để lưu trữ bệnh án của thú cưng</p>
+                </div>
+                
+                <form action="/vet/pets/<%= pet._id %>/medical" method="POST">
+                    <div class="form-group">
+                        <label class="form-label">Triệu chứng</label>
+                        <div class="input-group mb-2">
+                            <input type="text" class="form-control" id="symptomInput" placeholder="Nhập triệu chứng và nhấn Enter">
+                            <button class="btn btn-outline-secondary" type="button" id="addSymptomBtn">Thêm</button>
+                        </div>
+                        <div id="symptomsList"></div>
+                        <input type="hidden" name="symptoms" id="symptomsHidden">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="diagnosis" class="form-label">Chẩn đoán</label>
+                        <textarea class="form-control" id="diagnosis" name="diagnosis" rows="3" required placeholder="Nhập chẩn đoán bệnh"></textarea>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="treatment" class="form-label">Phương pháp điều trị</label>
+                        <textarea class="form-control" id="treatment" name="treatment" rows="3" required placeholder="Nhập phương pháp điều trị"></textarea>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="notes" class="form-label">Ghi chú</label>
+                        <textarea class="form-control" id="notes" name="notes" rows="3" placeholder="Nhập ghi chú bổ sung"></textarea>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="followUpDate" class="form-label">Ngày tái khám</label>
+                        <input type="date" class="form-control" id="followUpDate" name="followUpDate">
+                    </div>
+                    
+                    <div class="form-group">
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="prescriptionRequired">
+                            <label class="form-check-label" for="prescriptionRequired">
+                                Kê đơn thuốc sau khi lưu bệnh án
+                            </label>
+                        </div>
+                    </div>
+                    
+                    <div class="mt-4 d-flex justify-content-end">
+                        <button type="button" class="btn btn-outline-secondary me-2" onclick="history.back()">Hủy</button>
+                        <button type="submit" class="btn btn-yellow">Lưu bệnh án</button>
+                    </div>
+                </form>
+            </div>
+        </main>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+    // Quản lý triệu chứng
+    const symptomsArray = [];
+    const symptomInput = document.getElementById('symptomInput');
+    const addSymptomBtn = document.getElementById('addSymptomBtn');
+    const symptomsList = document.getElementById('symptomsList');
+    const symptomsHidden = document.getElementById('symptomsHidden');
+    
+    function updateSymptomsInput() {
+        symptomsHidden.value = JSON.stringify(symptomsArray);
+    }
+    
+    function addSymptom() {
+        const symptom = symptomInput.value.trim();
+        if (symptom && !symptomsArray.includes(symptom)) {
+            symptomsArray.push(symptom);
+            renderSymptoms();
+            updateSymptomsInput();
+            symptomInput.value = '';
+        }
+    }
+    
+    function removeSymptom(index) {
+        symptomsArray.splice(index, 1);
+        renderSymptoms();
+        updateSymptomsInput();
+    }
+    
+    function renderSymptoms() {
+        symptomsList.innerHTML = '';
+        symptomsArray.forEach((symptom, index) => {
+            const badge = document.createElement('span');
+            badge.className = 'symptom-badge';
+            badge.innerHTML = `${symptom} <span class="remove-btn" onclick="removeSymptom(${index})"><i class="fas fa-times"></i></span>`;
+            symptomsList.appendChild(badge);
+        });
+    }
+    
+    addSymptomBtn.addEventListener('click', addSymptom);
+    
+    symptomInput.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            addSymptom();
+        }
+    });
+    
+    // Chuyển đến trang kê đơn sau khi lưu bệnh án nếu đã chọn
+    document.querySelector('form').addEventListener('submit', (e) => {
+        if (document.getElementById('prescriptionRequired').checked) {
+            localStorage.setItem('redirectToPrescription', 'true');
+        }
+    });
+</script>
+</body>
+</html>

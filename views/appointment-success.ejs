@@ -1,0 +1,225 @@
+<!-- views/appointment-success.ejs -->
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Đặt lịch thành công</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body {
+            background-color: #ffffff;
+            color: #333;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        .navbar {
+            background-color: white;
+            color: #333;
+        }
+        .success-card {
+            max-width: 700px;
+            margin: 50px auto;
+            padding: 30px;
+            background-color: white;
+            border-radius: 10px;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+            border: 1px solid #ddd;
+            text-align: center;
+        }
+        .success-icon {
+            font-size: 5rem;
+            color: #28a745;
+            margin-bottom: 20px;
+        }
+        .menu-link {
+            position: relative;
+            display: inline-block;
+            font-weight: 500;
+            font-size: 1rem;
+            transition: color 0.3s ease, transform 0.3s ease;
+        }
+        
+        .menu-link::after {
+            content: "";
+            position: absolute;
+            left: 50%;
+            bottom: -5px;
+            transform: translateX(-50%);
+            width: 0;
+            height: 2px;
+            background-color: #f7c800;
+            transition: none;
+        }
+        
+        .menu-link:hover {
+            color: #f7c800;
+            transform: scale(1.1);
+        }
+        
+        .menu-link:hover::after {
+            animation: wave-effect 0.5s cubic-bezier(0.25, 1, 0.5, 1) forwards;
+        }
+        
+        @keyframes wave-effect {
+            0% {
+                width: 0;
+                left: 50%;
+                transform: translateX(-50%);
+            }
+            50% {
+                width: 100%;
+                left: 0;
+                transform: translateX(0);
+            }
+            100% {
+                width: 0;
+                left: 50%;
+                transform: translateX(-50%);
+            }
+        }
+        
+        .btn-primary {
+            background-color: #f7c800;
+            border-color: #f7c800;
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background-color: #e6b800;
+            border-color: #e6b800;
+        }
+        
+        .appointment-details {
+            background-color: #f9f9f9;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+            text-align: left;
+        }
+        
+        .appointment-details h5 {
+            margin-bottom: 15px;
+            color: #555;
+            border-bottom: 1px solid #ddd;
+            padding-bottom: 10px;
+        }
+        
+        .details-row {
+            display: flex;
+            margin-bottom: 8px;
+        }
+        
+        .details-label {
+            font-weight: 600;
+            width: 40%;
+            color: #666;
+        }
+        
+        .details-value {
+            width: 60%;
+        }
+    </style>
+</head>
+<body>
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand-lg navbar-light bg-white shadow-sm">
+        <div class="container">
+            <a class="navbar-brand text-dark me-3" href="/">
+                <i class="fas fa-paw me-2"></i>Pet Care Center
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav">
+                    <li class="nav-item">
+                        <a class="nav-link text-dark menu-link" href="/">Trang chủ</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link text-dark menu-link" href="/services">Dịch vụ</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link text-dark menu-link" href="/appointment">Đặt lịch</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link text-dark menu-link" href="/pet-health">Sức khỏe thú cưng</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container">
+        <div class="success-card">
+            <i class="fas fa-check-circle success-icon"></i>
+            <h2>Đặt lịch thành công!</h2>
+            <p class="lead mb-4">Cảm ơn bạn đã sử dụng dịch vụ của chúng tôi. Thông tin cuộc hẹn của bạn đã được ghi nhận.</p>
+            
+            <div class="appointment-details">
+                <h5><i class="fas fa-calendar-check me-2"></i>Chi tiết cuộc hẹn</h5>
+                
+                <div class="details-row">
+                    <div class="details-label">Khách hàng:</div>
+                    <div class="details-value"><%= appointmentInfo.customerName %></div>
+                </div>
+                
+                <div class="details-row">
+                    <div class="details-label">Thú cưng:</div>
+                    <div class="details-value"><%= appointmentInfo.petName %></div>
+                </div>
+                
+                <div class="details-row">
+                    <div class="details-label">Dịch vụ:</div>
+                    <div class="details-value"><%= appointmentInfo.service %></div>
+                </div>
+                
+                <div class="details-row">
+                    <div class="details-label">Ngày:</div>
+                    <div class="details-value"><%= new Date(appointmentInfo.date).toLocaleDateString('vi-VN') %></div>
+                </div>
+                
+                <div class="details-row">
+                    <div class="details-label">Giờ:</div>
+                    <div class="details-value"><%= appointmentInfo.time %></div>
+                </div>
+            </div>
+            
+            <p class="mb-4">Chúng tôi sẽ liên hệ xác nhận lịch hẹn qua số điện thoại hoặc email của bạn.</p>
+            
+            <div class="d-grid gap-2 col-6 mx-auto">
+                <a href="/" class="btn btn-primary">Về trang chủ</a>
+            </div>
+            
+            <div class="mt-4">
+                <p class="small text-muted">Nếu bạn cần thay đổi hoặc hủy lịch hẹn, vui lòng liên hệ số điện thoại: <strong>0982-495-562</strong></p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="bg-dark text-white py-4">
+        <div class="container">
+            <div class="row">
+                <div class="col-md-4">
+                    <h5>Pet Care Center</h5>
+                    <p>Chăm sóc tốt nhất cho người bạn thân yêu của bạn</p>
+                </div>
+                <div class="col-md-4">
+                    <h5>Liên hệ</h5>
+                    <ul class="list-unstyled">
+                        <li><i class="fas fa-phone me-2"></i> 0982-495-562</li>
+                        <li><i class="fas fa-envelope me-2"></i> phanquyenkols.booking@gmail.com</li>
+                    </ul>
+                </div>
+            </div>
+            <hr>
+            <div class="text-center">
+                <p>&copy; 2025 Pet Care Center. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

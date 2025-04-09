@@ -1,0 +1,218 @@
+<!-- views/vet-add-health-record.ejs -->
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cập nhật hồ sơ sức khỏe - <%= pet.name %></title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body {
+            background-color: #ffffff;
+            color: #333;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        .vet-sidebar {
+            background-color: #343a40;
+            color: #fff;
+            min-height: 100vh;
+            padding-top: 15px;
+        }
+        .vet-sidebar .nav-link {
+            color: rgba(255, 255, 255, 0.75);
+            padding: 10px 20px;
+            border-radius: 0;
+            margin-bottom: 5px;
+        }
+        .vet-sidebar .nav-link:hover, .vet-sidebar .nav-link.active {
+            color: #fff;
+            background-color: rgba(255, 255, 255, 0.1);
+        }
+        .vet-sidebar .nav-link i {
+            margin-right: 10px;
+            width: 20px;
+            text-align: center;
+        }
+        .content-wrapper {
+            padding: 20px;
+        }
+        .form-card {
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            padding: 25px;
+            margin-bottom: 20px;
+        }
+        .form-header {
+            margin-bottom: 25px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid #eee;
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        .btn-yellow {
+            background-color: #f7c800;
+            color: white;
+            border: none;
+        }
+        .btn-yellow:hover {
+            background-color: #e6b800;
+            color: white;
+        }
+        .pet-info {
+            padding: 15px;
+            background-color: #f8f9fa;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+        .pet-name {
+            font-weight: 600;
+            font-size: 18px;
+            margin-bottom: 5px;
+        }
+        .pet-details {
+            color: #666;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container-fluid">
+    <div class="row">
+        <!-- Sidebar -->
+        <div class="col-md-3 col-lg-2 d-md-block vet-sidebar collapse">
+            <div class="text-center mb-4 pt-3">
+                <i class="fas fa-user-md fa-3x mb-2"></i>
+                <h5><%= user.name %></h5>
+                <small>Bác sĩ thú y</small>
+            </div>
+            <hr>
+            <ul class="nav flex-column">
+                <li class="nav-item">
+                    <a class="nav-link" href="/vet/dashboard">
+                        <i class="fas fa-tachometer-alt"></i> Dashboard
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link active" href="/vet/pets">
+                        <i class="fas fa-paw"></i> Thú cưng
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="/vet/appointments">
+                        <i class="fas fa-calendar-check"></i> Lịch hẹn
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="/vet/prescriptions">
+                        <i class="fas fa-prescription-bottle-alt"></i> Đơn thuốc
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="/vet/medical-records">
+                        <i class="fas fa-notes-medical"></i> Bệnh án
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="/logout">
+                        <i class="fas fa-sign-out-alt"></i> Đăng xuất
+                    </a>
+                </li>
+            </ul>
+        </div>
+
+        <!-- Main Content -->
+        <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4 content-wrapper">
+            <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+                <h1 class="h2">Cập nhật hồ sơ sức khỏe</h1>
+                <div class="btn-toolbar mb-2 mb-md-0">
+                    <a href="/vet/pets/<%= pet._id %>" class="btn btn-sm btn-outline-secondary">
+                        <i class="fas fa-arrow-left me-1"></i> Quay lại
+                    </a>
+                </div>
+            </div>
+            
+            <!-- Pet Info Summary -->
+            <div class="pet-info">
+                <div class="pet-name"><%= pet.name %></div>
+                <div class="pet-details">
+                    <%= pet.type %> - <%= pet.breed || 'Không xác định' %> | 
+                    Chủ nhân: <%= pet.ownerName %> | 
+                    Liên hệ: <%= pet.ownerPhone %>
+                </div>
+            </div>
+
+            <!-- Health Record Form -->
+            <div class="form-card">
+                <div class="form-header">
+                    <h4><i class="fas fa-heartbeat me-2"></i> Thông tin khám sức khỏe</h4>
+                    <p class="text-muted">Nhập các thông số sức khỏe để cập nhật hồ sơ thú cưng</p>
+                </div>
+                
+                <form action="/vet/pets/<%= pet._id %>/health" method="POST">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="temperature" class="form-label">Nhiệt độ (°C)</label>
+                                <input type="number" step="0.1" class="form-control" id="temperature" name="temperature" placeholder="Ví dụ: 38.5">
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="weight" class="form-label">Cân nặng (kg)</label>
+                                <input type="number" step="0.1" class="form-control" id="weight" name="weight" placeholder="Ví dụ: 5.2">
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="heartRate" class="form-label">Nhịp tim (bpm)</label>
+                                <input type="number" class="form-control" id="heartRate" name="heartRate" placeholder="Ví dụ: 120">
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="respirationRate" class="form-label">Nhịp thở (bpm)</label>
+                                <input type="number" class="form-control" id="respirationRate" name="respirationRate" placeholder="Ví dụ: 25">
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="status" class="form-label">Tình trạng sức khỏe</label>
+                        <select class="form-select" id="status" name="status" required>
+                            <option value="healthy">Khỏe mạnh</option>
+                            <option value="sick">Đang bệnh</option>
+                            <option value="recovering">Đang hồi phục</option>
+                            <option value="critical">Nguy kịch</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="notes" class="form-label">Ghi chú</label>
+                        <textarea class="form-control" id="notes" name="notes" rows="4" placeholder="Nhập các ghi chú khác về tình trạng sức khỏe"></textarea>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="nextCheckupDate" class="form-label">Ngày tái khám</label>
+                        <input type="date" class="form-control" id="nextCheckupDate" name="nextCheckupDate">
+                    </div>
+                    
+                    <div class="mt-4 d-flex justify-content-end">
+                        <button type="button" class="btn btn-outline-secondary me-2" onclick="history.back()">Hủy</button>
+                        <button type="submit" class="btn btn-yellow">Lưu thông tin</button>
+                    </div>
+                </form>
+            </div>
+        </main>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
