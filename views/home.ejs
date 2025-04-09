@@ -273,6 +273,7 @@
             </div>
         </div>
     </section>
+    
     <section class="registered-pets-section py-5 bg-light">
         <div class="container">
             <h2 class="services-title">THÚ CƯNG ĐÃ ĐĂNG KÝ</h2>
@@ -320,24 +321,65 @@
                                             </div>
                                             <div class="prescription-info p-2 bg-light border rounded">
                                                 <small class="d-block fw-bold mb-1">Đơn thuốc gần nhất:</small>
-                                                <% pet.prescriptions[0].medications.slice(0, 2).forEach(med => { %>
-                                                    <small class="d-block">- <%= med.name %>: <%= med.dosage %></small>
-                                                <% }) %>
-                                                <% if (pet.prescriptions[0].medications.length > 2) { %>
-                                                    <small class="d-block text-muted">...và <%= pet.prescriptions[0].medications.length - 2 %> loại thuốc khác</small>
+                                                <% if (pet.prescriptions[0].medications && pet.prescriptions[0].medications.length > 0) { %>
+                                                    <% pet.prescriptions[0].medications.slice(0, 2).forEach(function(med) { %>
+                                                        <small class="d-block">- <%= med.name %>: <%= med.dosage %></small>
+                                                    <% }); %>
+                                                    <% if (pet.prescriptions[0].medications.length > 2) { %>
+                                                        <small class="d-block text-muted">...và <%= pet.prescriptions[0].medications.length - 2 %> loại thuốc khác</small>
+                                                    <% } %>
+                                                <% } else { %>
+                                                    <small class="d-block">Không có chi tiết thuốc</small>
                                                 <% } %>
                                             </div>
+                                        <% } else if (pet.appointments && pet.appointments.length > 0) { %>
+                                            <% var appointment = pet.appointments[0]; %>
+                                            <% if (appointment.status === 'confirmed') { %>
+                                                <div class="alert alert-primary mb-2" role="alert">
+                                                    <i class="fas fa-check-circle me-2"></i> Đã xác nhận lịch hẹn
+                                                </div>
+                                                <div class="prescription-info p-2 bg-light border rounded">
+                                                    <small class="d-block">Dịch vụ: <%= appointment.service %></small>
+                                                    <small class="d-block">Ngày: <%= new Date(appointment.date).toLocaleDateString('vi-VN') %></small>
+                                                    <small class="d-block">Giờ: <%= appointment.time %></small>
+                                                </div>
+                                            <% } else if (appointment.status === 'cancelled') { %>
+                                                <div class="alert alert-danger mb-2" role="alert">
+                                                    <i class="fas fa-times-circle me-2"></i> Đã từ chối yêu cầu
+                                                </div>
+                                                <div class="prescription-info p-2 bg-light border rounded">
+                                                    <small class="d-block">Dịch vụ: <%= appointment.service %></small>
+                                                    <small class="d-block">Ngày yêu cầu: <%= new Date(appointment.date).toLocaleDateString('vi-VN') %></small>
+                                                    <small class="d-block">Vui lòng đặt lịch lại</small>
+                                                </div>
+                                            <% } else if (appointment.status === 'pending') { %>
+                                                <div class="alert alert-warning mb-2" role="alert">
+                                                    <i class="fas fa-hourglass-half me-2"></i> Đang chờ xác nhận
+                                                </div>
+                                                <div class="prescription-info p-2 bg-light border rounded">
+                                                    <small class="d-block">Dịch vụ: <%= appointment.service %></small>
+                                                    <small class="d-block">Ngày: <%= new Date(appointment.date).toLocaleDateString('vi-VN') %></small>
+                                                    <small class="d-block">Giờ: <%= appointment.time %></small>
+                                                </div>
+                                            <% } else if (appointment.status === 'completed') { %>
+                                                <div class="alert alert-success mb-2" role="alert">
+                                                    <i class="fas fa-check-double me-2"></i> Đã hoàn thành
+                                                </div>
+                                                <div class="prescription-info p-2 bg-light border rounded">
+                                                    <small class="d-block">Dịch vụ: <%= appointment.service %></small>
+                                                    <small class="d-block">Ngày: <%= new Date(appointment.date).toLocaleDateString('vi-VN') %></small>
+                                                </div>
+                                            <% } %>
                                         <% } else { %>
-                                            <div class="alert alert-warning mb-2" role="alert">
-                                                <i class="fas fa-hourglass-half me-2"></i> Đang xử lý
+                                            <div class="alert alert-secondary mb-2" role="alert">
+                                                <i class="fas fa-paw me-2"></i> Mới đăng ký
                                             </div>
                                         <% } %>
                                     </div>
-                
                                 </div>
                             </div>
                         </div>
-                    <% }) %>
+                    <% }); %>
                 </div>
             <% } else { %>
                 <div class="text-center py-5">

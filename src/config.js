@@ -1,7 +1,4 @@
-// config.js
 const mongoose = require('mongoose');
-
-// Connect to MongoDB
 const connect = mongoose.connect("mongodb://0.0.0.0:27017/Pet");
 
 connect.then(() => {
@@ -11,7 +8,6 @@ connect.then(() => {
     console.log("Database cannot be Connected");
 });
 
-// User schema (for admin and vet)
 const UserSchema = new mongoose.Schema({
     name: {
         type: String,
@@ -29,8 +25,8 @@ const UserSchema = new mongoose.Schema({
     },
     role: {
         type: String,
-        enum: ['admin', 'vet'],
-        default: 'vet'
+        enum: ['admin', 'vet', 'staff'], 
+        default: 'staff'
     },
     createdAt: {
         type: Date,
@@ -38,7 +34,6 @@ const UserSchema = new mongoose.Schema({
     }
 });
 
-// Pet schema
 const PetSchema = new mongoose.Schema({
     name: {
         type: String,
@@ -79,7 +74,6 @@ const PetSchema = new mongoose.Schema({
     }
 });
 
-// Health Record schema
 const HealthRecordSchema = new mongoose.Schema({
     pet: {
         type: mongoose.Schema.Types.ObjectId,
@@ -107,7 +101,6 @@ const HealthRecordSchema = new mongoose.Schema({
     }
 });
 
-// Medical Record (case history) schema
 const MedicalRecordSchema = new mongoose.Schema({
     pet: {
         type: mongoose.Schema.Types.ObjectId,
@@ -129,7 +122,6 @@ const MedicalRecordSchema = new mongoose.Schema({
     followUpDate: Date
 });
 
-// Prescription schema
 const PrescriptionSchema = new mongoose.Schema({
     pet: {
         type: mongoose.Schema.Types.ObjectId,
@@ -156,12 +148,15 @@ const PrescriptionSchema = new mongoose.Schema({
         type: String,
         enum: ['active', 'completed', 'cancelled'],
         default: 'active'
+    },
+
+    medicalRecord: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'medicalRecords'
     }
 });
 
-// Appointment schema
 const AppointmentSchema = new mongoose.Schema({
-    // Customer information
     customerName: {
         type: String,
         required: true
@@ -174,7 +169,6 @@ const AppointmentSchema = new mongoose.Schema({
         type: String,
         required: true
     },
-    // Pet information
     petName: {
         type: String,
         required: true
@@ -186,7 +180,6 @@ const AppointmentSchema = new mongoose.Schema({
     petBreed: {
         type: String
     },
-    // Appointment details
     service: {
         type: String,
         required: true,
@@ -218,7 +211,6 @@ const AppointmentSchema = new mongoose.Schema({
     }
 });
 
-// Create Models
 const UserCollection = mongoose.model("users", UserSchema);
 const PetCollection = mongoose.model("pets", PetSchema);
 const HealthRecordCollection = mongoose.model("healthRecords", HealthRecordSchema);

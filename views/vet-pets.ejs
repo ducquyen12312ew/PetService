@@ -128,9 +128,6 @@
                     </a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link" href="/vet/prescriptions">
-                        <i class="fas fa-prescription-bottle-alt"></i> Đơn thuốc
-                    </a>
                 </li>
                 <li class="nav-item">
                     <a class="nav-link" href="/vet/medical-records">
@@ -138,9 +135,6 @@
                     </a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link" href="/logout">
-                        <i class="fas fa-sign-out-alt"></i> Đăng xuất
-                    </a>
                 </li>
             </ul>
         </div>
@@ -205,6 +199,11 @@
                                 <div class="pet-info">
                                     <span class="label">Liên hệ:</span> <%= pet.ownerPhone %>
                                 </div>
+                                <% if (pet.service) { %>
+                                    <div class="pet-info">
+                                        <span class="label">Dịch vụ:</span> <%= pet.service %>
+                                    </div>
+                                <% } %>
                                 <div class="pet-info">
                                     <span class="label">Tuổi:</span> <%= pet.age || 'Chưa xác định' %>
                                 </div>
@@ -216,12 +215,33 @@
                                 </div>
                             </div>
                             <div class="pet-actions">
-                                <a href="/vet/pets/<%= pet._id %>" class="btn btn-sm btn-yellow">
-                                    <i class="fas fa-stethoscope me-1"></i> Quản lý sức khỏe
-                                </a>
-                                <a href="/vet/pets/<%= pet._id %>/prescription" class="btn btn-sm btn-outline-secondary">
-                                    <i class="fas fa-prescription me-1"></i> Kê đơn
-                                </a>
+                                <% if (!pet.service || pet.service === 'khám sức khỏe') { %>
+                                    <a href="/vet/pets/<%= pet._id %>" class="btn btn-sm btn-yellow">
+                                        <i class="fas fa-stethoscope me-1"></i> Quản lý sức khỏe
+                                    </a>
+                                    <a href="/vet/pets/<%= pet._id %>/prescriptions" class="btn btn-sm btn-outline-secondary">
+                                        <i class="fas fa-prescription-bottle-alt me-1"></i> Xem đơn thuốc
+                                    </a>
+                                <% } else if (pet.service === 'tắm') { %>
+                                    <a href="/vet/pets/<%= pet._id %>" class="btn btn-sm btn-yellow">
+                                        <i class="fas fa-bath me-1"></i> Dịch vụ tắm
+                                    </a>
+                                <% } else if (pet.service === 'cắt tỉa lông') { %>
+                                    <a href="/vet/pets/<%= pet._id %>" class="btn btn-sm btn-yellow">
+                                        <i class="fas fa-cut me-1"></i> Dịch vụ cắt tỉa
+                                    </a>
+                                <% } else if (pet.service === 'lưu trú') { %>
+                                    <a href="/vet/pets/<%= pet._id %>" class="btn btn-sm btn-yellow">
+                                        <i class="fas fa-home me-1"></i> Dịch vụ lưu trú
+                                    </a>
+                                <% } else { %>
+                                    <a href="/vet/pets/<%= pet._id %>" class="btn btn-sm btn-yellow">
+                                        <i class="fas fa-stethoscope me-1"></i> Quản lý sức khỏe
+                                    </a>
+                                <% } %>
+                                
+                                <% if (pet.appointmentStatus === 'confirmed' || pet.appointmentStatus === 'pending') { %>
+                                <% } %>
                             </div>
                         </div>
                     </div>

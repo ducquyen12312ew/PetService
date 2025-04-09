@@ -1,0 +1,289 @@
+<!-- views/vet-appointment-detail.ejs -->
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chi tiết lịch hẹn</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body {
+            background-color: #ffffff;
+            color: #333;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        .vet-sidebar {
+            background-color: #343a40;
+            color: #fff;
+            min-height: 100vh;
+            padding-top: 15px;
+        }
+        .vet-sidebar .nav-link {
+            color: rgba(255, 255, 255, 0.75);
+            padding: 10px 20px;
+            border-radius: 0;
+            margin-bottom: 5px;
+        }
+        .vet-sidebar .nav-link:hover, .vet-sidebar .nav-link.active {
+            color: #fff;
+            background-color: rgba(255, 255, 255, 0.1);
+        }
+        .vet-sidebar .nav-link i {
+            margin-right: 10px;
+            width: 20px;
+            text-align: center;
+        }
+        .content-wrapper {
+            padding: 20px;
+        }
+        .detail-card {
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            margin-bottom: 20px;
+        }
+        .detail-header {
+            padding: 20px;
+            border-bottom: 1px solid #eee;
+            position: relative;
+        }
+        .detail-status {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+        }
+        .detail-body {
+            padding: 20px;
+        }
+        .detail-section {
+            margin-bottom: 30px;
+        }
+        .detail-section-title {
+            font-weight: 600;
+            font-size: 18px;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #eee;
+        }
+        .detail-info {
+            margin-bottom: 8px;
+        }
+        .detail-label {
+            font-weight: 600;
+            color: #555;
+        }
+        .pet-info-card {
+            background-color: #f8f9fa;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 20px;
+        }
+        .pet-info-name {
+            font-weight: 600;
+            font-size: 18px;
+            margin-bottom: 10px;
+        }
+        .btn-yellow {
+            background-color: #f7c800;
+            color: white;
+            border: none;
+        }
+        .btn-yellow:hover {
+            background-color: #e6b800;
+            color: white;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container-fluid">
+    <div class="row">
+        <!-- Sidebar -->
+        <div class="col-md-3 col-lg-2 d-md-block vet-sidebar collapse">
+            <div class="text-center mb-4 pt-3">
+                <i class="fas fa-user-md fa-3x mb-2"></i>
+                <h5><%= user.name %></h5>
+                <small>Bác sĩ thú y</small>
+            </div>
+            <hr>
+            <ul class="nav flex-column">
+                <li class="nav-item">
+                    <a class="nav-link" href="/vet/dashboard">
+                        <i class="fas fa-tachometer-alt"></i> Dashboard
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="/vet/pets">
+                        <i class="fas fa-paw"></i> Thú cưng
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link active" href="/vet/appointments">
+                        <i class="fas fa-calendar-check"></i> Lịch hẹn
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="/vet/prescriptions">
+                        <i class="fas fa-prescription-bottle-alt"></i> Đơn thuốc
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="/vet/medical-records">
+                        <i class="fas fa-notes-medical"></i> Bệnh án
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="/logout">
+                        <i class="fas fa-sign-out-alt"></i> Đăng xuất
+                    </a>
+                </li>
+            </ul>
+        </div>
+
+        <!-- Main Content -->
+        <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4 content-wrapper">
+            <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+                <h1 class="h2">Chi tiết lịch hẹn</h1>
+                <div class="btn-toolbar mb-2 mb-md-0">
+                    <a href="/vet/appointments" class="btn btn-sm btn-outline-secondary">
+                        <i class="fas fa-arrow-left me-1"></i> Quay lại
+                    </a>
+                </div>
+            </div>
+
+            <!-- Appointment Details -->
+            <div class="detail-card">
+                <div class="detail-header">
+                    <h3>Lịch hẹn #<%= appointment._id.toString().slice(-6).toUpperCase() %></h3>
+                    <div class="detail-status">
+                        <% if (appointment.status === 'pending') { %>
+                            <span class="badge bg-warning text-dark">Chờ xác nhận</span>
+                        <% } else if (appointment.status === 'confirmed') { %>
+                            <span class="badge bg-primary">Đã xác nhận</span>
+                        <% } else if (appointment.status === 'completed') { %>
+                            <span class="badge bg-success">Hoàn thành</span>
+                        <% } else if (appointment.status === 'cancelled') { %>
+                            <span class="badge bg-danger">Đã hủy</span>
+                        <% } %>
+                    </div>
+                </div>
+                <div class="detail-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="detail-section">
+                                <h4 class="detail-section-title">Thông tin lịch hẹn</h4>
+                                <div class="detail-info">
+                                    <span class="detail-label">Ngày:</span> 
+                                    <%= new Date(appointment.date).toLocaleDateString('vi-VN') %>
+                                </div>
+                                <div class="detail-info">
+                                    <span class="detail-label">Giờ:</span> 
+                                    <%= appointment.time %>
+                                </div>
+                                <div class="detail-info">
+                                    <span class="detail-label">Dịch vụ:</span> 
+                                    <%= appointment.service %>
+                                </div>
+                                <div class="detail-info">
+                                    <span class="detail-label">Trạng thái:</span> 
+                                    <% if (appointment.status === 'pending') { %>
+                                        <span class="text-warning">Chờ xác nhận</span>
+                                    <% } else if (appointment.status === 'confirmed') { %>
+                                        <span class="text-primary">Đã xác nhận</span>
+                                    <% } else if (appointment.status === 'completed') { %>
+                                        <span class="text-success">Hoàn thành</span>
+                                    <% } else if (appointment.status === 'cancelled') { %>
+                                        <span class="text-danger">Đã hủy</span>
+                                    <% } %>
+                                </div>
+                                <div class="detail-info">
+                                    <span class="detail-label">Ngày tạo:</span> 
+                                    <%= new Date(appointment.createdAt).toLocaleString('vi-VN') %>
+                                </div>
+                            </div>
+
+                            <div class="detail-section">
+                                <h4 class="detail-section-title">Thông tin liên hệ</h4>
+                                <div class="detail-info">
+                                    <span class="detail-label">Tên khách hàng:</span> 
+                                    <%= appointment.customerName %>
+                                </div>
+                                <div class="detail-info">
+                                    <span class="detail-label">Email:</span> 
+                                    <%= appointment.customerEmail %>
+                                </div>
+                                <div class="detail-info">
+                                    <span class="detail-label">Số điện thoại:</span> 
+                                    <%= appointment.customerPhone %>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-md-6">
+                            <div class="pet-info-card">
+                                <div class="pet-info-name">
+                                    <i class="fas fa-paw me-2"></i> <%= appointment.petName %>
+                                </div>
+                                <div class="detail-info">
+                                    <span class="detail-label">Loại:</span> 
+                                    <%= appointment.petType %>
+                                </div>
+                                <div class="detail-info">
+                                    <span class="detail-label">Giống:</span> 
+                                    <%= appointment.petBreed || 'Không xác định' %>
+                                </div>
+                                <div class="mt-3">
+                                    <a href="#" class="btn btn-sm btn-outline-primary">Xem hồ sơ thú cưng</a>
+                                </div>
+                            </div>
+
+                            <div class="detail-section">
+                                <h4 class="detail-section-title">Ghi chú</h4>
+                                <p><%= appointment.notes || 'Không có ghi chú' %></p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row mt-4">
+                        <div class="col-12">
+                            <div class="d-flex justify-content-between">
+                                <div>
+                                    <% if (appointment.status === 'pending') { %>
+                                        <button class="btn btn-success me-2">
+                                            <i class="fas fa-check me-1"></i> Xác nhận lịch hẹn
+                                        </button>
+                                        <button class="btn btn-danger">
+                                            <i class="fas fa-times me-1"></i> Hủy lịch hẹn
+                                        </button>
+                                    <% } else if (appointment.status === 'confirmed') { %>
+                                        <button class="btn btn-success me-2">
+                                            <i class="fas fa-check-double me-1"></i> Hoàn thành
+                                        </button>
+                                        <button class="btn btn-danger">
+                                            <i class="fas fa-times me-1"></i> Hủy lịch hẹn
+                                        </button>
+                                    <% } %>
+                                </div>
+                                <div>
+                                    <a href="#" class="btn btn-outline-secondary me-2">
+                                        <i class="fas fa-print me-1"></i> In chi tiết
+                                    </a>
+                                    <% if (appointment.status !== 'completed' && appointment.status !== 'cancelled') { %>
+                                        <a href="#" class="btn btn-yellow">
+                                            <i class="fas fa-stethoscope me-1"></i> Bắt đầu khám
+                                        </a>
+                                    <% } %>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

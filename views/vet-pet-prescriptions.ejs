@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Đơn thuốc của <%= pet.name %> - Bác sĩ thú y</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body {
+            background-color: #ffffff;
+            color: #333;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        .vet-sidebar {
+            background-color: #343a40;
+            color: #fff;
+            min-height: 100vh;
+            padding-top: 15px;
+        }
+        .vet-sidebar .nav-link {
+            color: rgba(255, 255, 255, 0.75);
+            padding: 10px 20px;
+            border-radius: 0;
+            margin-bottom: 5px;
+        }
+        .vet-sidebar .nav-link:hover, .vet-sidebar .nav-link.active {
+            color: #fff;
+            background-color: rgba(255, 255, 255, 0.1);
+        }
+        .vet-sidebar .nav-link i {
+            margin-right: 10px;
+            width: 20px;
+            text-align: center;
+        }
+        .content-wrapper {
+            padding: 20px;
+        }
+        .pet-header {
+            background-color: #f7c800;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 30px;
+            color: white;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+        .prescription-card {
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            margin-bottom: 25px;
+            overflow: hidden;
+        }
+        .prescription-header {
+            background-color: #4e73df;
+            color: white;
+            padding: 15px;
+            font-weight: 600;
+        }
+        .prescription-body {
+            padding: 20px;
+        }
+        .medication-item {
+            background-color: #f9f9f9;
+            border-radius: 6px;
+            padding: 15px;
+            margin-bottom: 15px;
+            border-left: 4px solid #f7c800;
+        }
+        .medication-name {
+            font-weight: 600;
+            margin-bottom: 5px;
+        }
+        .medication-detail {
+            color: #666;
+            font-size: 0.9rem;
+        }
+        .instructions {
+            background-color: #f0f8ff;
+            border-radius: 6px;
+            padding: 15px;
+            margin-top: 15px;
+            border-left: 4px solid #4e73df;
+        }
+        .symptom-tag {
+            display: inline-block;
+            background-color: #f7c800;
+            color: #333;
+            border-radius: 20px;
+            padding: 2px 10px;
+            margin-right: 5px;
+            margin-bottom: 5px;
+            font-size: 0.8rem;
+        }
+        .btn-yellow {
+            background-color: #f7c800;
+            color: white;
+            border: none;
+        }
+        .btn-yellow:hover {
+            background-color: #e6b800;
+            color: white;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container-fluid">
+    <div class="row">
+        <!-- Sidebar -->
+        <div class="col-md-3 col-lg-2 d-md-block vet-sidebar collapse">
+            <div class="text-center mb-4 pt-3">
+                <i class="fas fa-user-md fa-3x mb-2"></i>
+                <h5><%= user.name %></h5>
+                <small>Bác sĩ thú y</small>
+            </div>
+            <hr>
+            <ul class="nav flex-column">
+                <li class="nav-item">
+                    <a class="nav-link" href="/vet/dashboard">
+                        <i class="fas fa-tachometer-alt"></i> Dashboard
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link active" href="/vet/pets">
+                        <i class="fas fa-paw"></i> Thú cưng
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="/vet/appointments">
+                        <i class="fas fa-calendar-check"></i> Lịch hẹn
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="/vet/prescriptions">
+                        <i class="fas fa-prescription-bottle-alt"></i> Đơn thuốc
+                    </a>
+                </li>
+                <li class="nav-item">
+                </li>
+                <li class="nav-item">
+                </li>
+            </ul>
+        </div>
+
+        <!-- Main Content -->
+        <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4 content-wrapper">
+            <div class="pet-header">
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="d-flex">
+                            <% if (pet.type.toLowerCase() === 'dog') { %>
+                                <i class="fas fa-dog fa-3x me-3"></i>
+                            <% } else if (pet.type.toLowerCase() === 'cat') { %>
+                                <i class="fas fa-cat fa-3x me-3"></i>
+                            <% } else { %>
+                                <i class="fas fa-paw fa-3x me-3"></i>
+                            <% } %>
+                            <div>
+                                <h2><%= pet.name %></h2>
+                                <p class="mb-0"><%= pet.type %> - <%= pet.breed || 'Không xác định' %></p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6 text-end">
+                        <div>
+                            <p class="mb-1"><strong>Chủ nhân:</strong> <%= pet.ownerName %></p>
+                            <p class="mb-1"><strong>Liên hệ:</strong> <%= pet.ownerPhone %></p>
+                            <p class="mb-0">
+                                <a href="/vet/pets/<%= pet._id %>" class="btn btn-sm btn-light mt-2">
+                                    <i class="fas fa-arrow-left me-1"></i> Quay lại thông tin
+                                </a>
+                                <a href="/vet/medical-records" class="btn btn-sm btn-yellow mt-2">
+                                    <i class="fas fa-plus me-1"></i> Tạo bệnh án mới
+                                </a>
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="mb-4">
+                <h4>Danh sách đơn thuốc</h4>
+                <p class="text-muted">Tất cả đơn thuốc được kê cho <%= pet.name %></p>
+            </div>
+            
+            <% if (prescriptions && prescriptions.length > 0) { %>
+                <% prescriptions.forEach(prescription => { %>
+                    <div class="prescription-card">
+                        <div class="prescription-header d-flex justify-content-between">
+                            <div>
+                                <i class="fas fa-prescription-bottle-alt me-2"></i> Đơn thuốc
+                                <% if (prescription.status === 'active') { %>
+                                    <span class="badge bg-success ms-2">Đang điều trị</span>
+                                <% } else if (prescription.status === 'completed') { %>
+                                    <span class="badge bg-secondary ms-2">Đã hoàn thành</span>
+                                <% } else if (prescription.status === 'cancelled') { %>
+                                    <span class="badge bg-danger ms-2">Đã hủy</span>
+                                <% } %>
+                            </div>
+                            <div>
+                                <%= new Date(prescription.date).toLocaleDateString('vi-VN') %> 
+                                | BS: <%= prescription.veterinarian ? prescription.veterinarian.name : 'Không xác định' %>
+                            </div>
+                        </div>
+                        
+                        <div class="prescription-body">
+                            <% if (prescription.medicalRecord) { %>
+                                <div class="mb-3">
+                                    <strong>Chẩn đoán:</strong> <%= prescription.medicalRecord.diagnosis || 'Không có' %>
+                                    
+                                    <% if (prescription.medicalRecord.symptoms && prescription.medicalRecord.symptoms.length > 0) { %>
+                                        <div class="mt-2">
+                                            <strong>Triệu chứng:</strong>
+                                            <div class="mt-1">
+                                                <% prescription.medicalRecord.symptoms.forEach(symptom => { %>
+                                                    <span class="symptom-tag"><%= symptom %></span>
+                                                <% }); %>
+                                            </div>
+                                        </div>
+                                    <% } %>
+                                </div>
+                            <% } %>
+                            
+                            <h5 class="mt-4 mb-3">Danh sách thuốc</h5>
+                            
+                            <% if (prescription.medications && prescription.medications.length > 0) { %>
+                                <% prescription.medications.forEach(med => { %>
+                                    <div class="medication-item">
+                                        <div class="medication-name"><%= med.name %></div>
+                                        <div class="medication-detail">
+                                            <div class="row">
+                                                <div class="col-md-4">
+                                                    <strong>Liều lượng:</strong> <%= med.dosage %>
+                                                </div>
+                                                <div class="col-md-4">
+                                                    <strong>Tần suất:</strong> <%= med.frequency %>
+                                                </div>
+                                                <div class="col-md-4">
+                                                    <strong>Thời gian dùng:</strong> <%= med.duration %>
+                                                </div>
+                                            </div>
+                                            <% if (med.notes) { %>
+                                                <div class="mt-2">
+                                                    <strong>Ghi chú:</strong> <%= med.notes %>
+                                                </div>
+                                            <% } %>
+                                        </div>
+                                    </div>
+                                <% }); %>
+                            <% } else { %>
+                                <div class="alert alert-info">Không có thông tin thuốc</div>
+                            <% } %>
+                            
+                            <% if (prescription.instructions) { %>
+                                <div class="instructions">
+                                    <h6>Hướng dẫn sử dụng:</h6>
+                                    <p class="mb-0"><%= prescription.instructions %></p>
+                                </div>
+                            <% } %>
+                            
+                            <div class="mt-4 text-end">
+                                <% if (prescription.status === 'active') { %>
+                                    <button class="btn btn-outline-secondary btn-sm me-2">
+                                        <i class="fas fa-print me-1"></i> In đơn thuốc
+                                    </button>
+                                    <button class="btn btn-success btn-sm me-2" data-status="completed" data-id="<%= prescription._id %>">
+                                        <i class="fas fa-check me-1"></i> Đánh dấu hoàn thành
+                                    </button>
+                                    <button class="btn btn-danger btn-sm" data-status="cancelled" data-id="<%= prescription._id %>">
+                                        <i class="fas fa-times me-1"></i> Hủy đơn thuốc
+                                    </button>
+                                <% } %>
+                            </div>
+                        </div>
+                    </div>
+                <% }); %>
+            <% } else { %>
+                <div class="alert alert-info">
+                    <i class="fas fa-info-circle me-2"></i> Chưa có đơn thuốc nào được kê cho thú cưng này
+                </div>
+                <div class="text-center mt-4">
+                    <a href="/vet/medical-records" class="btn btn-yellow">
+                        <i class="fas fa-plus me-1"></i> Tạo bệnh án và kê đơn thuốc mới
+                    </a>
+                </div>
+            <% } %>
+        </main>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+    // Xử lý cập nhật trạng thái đơn thuốc
+    document.querySelectorAll('[data-status]').forEach(button => {
+        button.addEventListener('click', async function() {
+            const id = this.getAttribute('data-id');
+            const status = this.getAttribute('data-status');
+            
+            if (confirm('Bạn có chắc muốn ' + (status === 'completed' ? 'đánh dấu hoàn thành' : 'hủy') + ' đơn thuốc này?')) {
+                try {
+                    const response = await fetch(`/vet/prescriptions/${id}/status`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({ status })
+                    });
+                    
+                    if (response.ok) {
+                        window.location.reload();
+                    } else {
+                        alert('Có lỗi xảy ra. Vui lòng thử lại.');
+                    }
+                } catch (error) {
+                    console.error('Error:', error);
+                    alert('Có lỗi xảy ra. Vui lòng thử lại.');
+                }
+            }
+        });
+    });
+</script>
+</body>
+</html>

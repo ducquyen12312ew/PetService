@@ -1,0 +1,529 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bệnh án thú cưng - Bác sĩ thú y</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body {
+            background-color: #ffffff;
+            color: #333;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        .vet-sidebar {
+            background-color: #343a40;
+            color: #fff;
+            min-height: 100vh;
+            padding-top: 15px;
+        }
+        .vet-sidebar .nav-link {
+            color: rgba(255, 255, 255, 0.75);
+            padding: 10px 20px;
+            border-radius: 0;
+            margin-bottom: 5px;
+        }
+        .vet-sidebar .nav-link:hover, .vet-sidebar .nav-link.active {
+            color: #fff;
+            background-color: rgba(255, 255, 255, 0.1);
+        }
+        .vet-sidebar .nav-link i {
+            margin-right: 10px;
+            width: 20px;
+            text-align: center;
+        }
+        .content-wrapper {
+            padding: 20px;
+        }
+        .record-card {
+            border-radius: 8px;
+            background-color: #fff;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            margin-bottom: 20px;
+            transition: transform 0.3s;
+        }
+        .record-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+        .record-header {
+            background-color: #4e73df;
+            color: white;
+            padding: 15px;
+            border-top-left-radius: 8px;
+            border-top-right-radius: 8px;
+            position: relative;
+        }
+        .record-info {
+            padding: 15px;
+        }
+        .symptom-tag {
+            display: inline-block;
+            background-color: #f7c800;
+            color: #333;
+            border-radius: 20px;
+            padding: 2px 10px;
+            margin-right: 5px;
+            margin-bottom: 5px;
+            font-size: 0.8rem;
+        }
+        .record-comment {
+            background-color: #f9f9f9;
+            border-top: 1px solid #eee;
+            padding: 15px;
+            border-bottom-left-radius: 8px;
+            border-bottom-right-radius: 8px;
+            font-style: italic;
+        }
+        .btn-yellow {
+            background-color: #f7c800;
+            color: white;
+            border: none;
+        }
+        .btn-yellow:hover {
+            background-color: #e6b800;
+            color: white;
+        }
+        .modal-header {
+            background-color: #4e73df;
+            color: white;
+        }
+        .tag-list {
+            margin-top: 10px;
+        }
+        .medication-item {
+            position: relative;
+        }
+        .record-card {
+            border-radius: 8px;
+            background-color: #fff;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            margin-bottom: 20px;
+            transition: transform 0.3s, box-shadow 0.3s;
+            position: relative;
+        }
+        
+        .record-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+        
+        .delete-record {
+            position: absolute;
+            right: 15px;
+            top: 15px;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+            background-color: rgba(255, 77, 77, 0.9);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            z-index: 10;
+        }
+        
+        .record-card:hover .delete-record {
+            opacity: 1;
+            visibility: visible;
+        }
+        
+        .delete-record:hover {
+            background-color: #ff3333;
+            transform: scale(1.1);
+        }
+    </style>
+</head>
+<body>
+
+<div class="container-fluid">
+    <div class="row">
+        <!-- Sidebar -->
+        <div class="col-md-3 col-lg-2 d-md-block vet-sidebar collapse">
+            <div class="text-center mb-4 pt-3">
+                <i class="fas fa-user-md fa-3x mb-2"></i>
+                <h5><%= user.name %></h5>
+                <small>Bác sĩ thú y</small>
+            </div>
+            <hr>
+            <ul class="nav flex-column">
+                <li class="nav-item">
+                    <a class="nav-link" href="/vet/dashboard">
+                        <i class="fas fa-tachometer-alt"></i> Dashboard
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="/vet/pets">
+                        <i class="fas fa-paw"></i> Thú cưng
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="/vet/appointments">
+                        <i class="fas fa-calendar-check"></i> Lịch hẹn
+                    </a>
+                </li>
+                <li class="nav-item">
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link active" href="/vet/medical-records">
+                        <i class="fas fa-notes-medical"></i> Bệnh án
+                    </a>
+                </li>
+                <li class="nav-item">
+                </li>
+            </ul>
+        </div>
+
+        <!-- Main Content -->
+        <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4 content-wrapper">
+            <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+                <h1 class="h2">Bệnh án thú cưng</h1>
+                <div class="btn-toolbar mb-2 mb-md-0">
+                    <button type="button" class="btn btn-yellow" data-bs-toggle="modal" data-bs-target="#addRecordModal">
+                        <i class="fas fa-plus me-1"></i> Thêm bệnh án mới
+                    </button>
+                </div>
+            </div>
+            
+            <!-- Search & Filter -->
+            <div class="row mb-4">
+                <div class="col-md-6">
+                    <div class="input-group">
+                        <input type="text" class="form-control" id="searchInput" placeholder="Tìm kiếm bệnh án...">
+                        <button class="btn btn-outline-secondary" type="button">
+                            <i class="fas fa-search"></i>
+                        </button>
+                    </div>
+                </div>
+                <div class="col-md-6 text-end">
+                    <select class="form-select" id="sortOrder">
+                        <option value="newest">Mới nhất</option>
+                        <option value="oldest">Cũ nhất</option>
+                        <option value="petName">Tên thú cưng</option>
+                    </select>
+                </div>
+            </div>
+            
+            <!-- Medical Records List -->
+            <div class="row">
+                <% if (medicalRecords && medicalRecords.length > 0) { %>
+                    <% medicalRecords.forEach(record => { %>
+                        <div class="col-lg-6 mb-4">
+                            <div class="record-card">
+                                <!-- Nút xóa sẽ xuất hiện khi hover -->
+                                <button class="delete-record" data-id="<%= record._id %>">
+                                    <i class="fas fa-trash-alt"></i>
+                                </button>
+                                
+                                <div class="record-header d-flex justify-content-between">
+                                    <div>
+                                        <h5 class="mb-0"><%= record.pet ? record.pet.name : 'Không xác định' %></h5>
+                                        <small><%= record.pet ? (record.pet.type + ' - ' + (record.pet.breed || 'Không xác định')) : '' %></small>
+                                    </div>
+                                    <div class="text-end">
+                                        <small class="d-block"><%= new Date(record.date).toLocaleDateString('vi-VN') %></small>
+                                        <small><%= record.veterinarian ? record.veterinarian.name : 'Không xác định' %></small>
+                                    </div>
+                                </div>
+                                
+                                <div class="record-info">
+                                    <div class="mb-3">
+                                        <strong>Chẩn đoán:</strong>
+                                        <div><%= record.diagnosis || 'Không có' %></div>
+                                    </div>
+                                    
+                                    <div class="mb-3">
+                                        <strong>Triệu chứng:</strong>
+                                        <div class="mt-1">
+                                            <% if (record.symptoms && record.symptoms.length > 0) { %>
+                                                <% record.symptoms.forEach(symptom => { %>
+                                                    <span class="symptom-tag"><%= symptom %></span>
+                                                <% }); %>
+                                            <% } else { %>
+                                                <span class="text-muted">Không có triệu chứng</span>
+                                            <% } %>
+                                        </div>
+                                    </div>
+                                    
+                                    <% if (record.notes) { %>
+                                        <div class="mb-3">
+                                            <strong>Ghi chú:</strong>
+                                            <div><%= record.notes %></div>
+                                        </div>
+                                    <% } %>
+                                </div>
+                                
+                                <% if (record.veterinarianComments) { %>
+                                    <div class="record-comment">
+                                        <strong>Comment của bác sĩ:</strong>
+                                        <p class="mb-0 mt-1"><%= record.veterinarianComments %></p>
+                                    </div>
+                                <% } %>
+                            </div>
+                        </div>
+                    <% }); %>
+                <% } else { %>
+                    <div class="col-12">
+                        <div class="alert alert-info">
+                            <i class="fas fa-info-circle me-2"></i> Chưa có bệnh án nào được tạo.
+                        </div>
+                    </div>
+                <% } %>
+            </div>
+        </main>
+    </div>
+</div>
+
+<!-- Add New Record Modal -->
+<div class="modal fade" id="addRecordModal" tabindex="-1" aria-labelledby="addRecordModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="addRecordModalLabel">Thêm bệnh án mới</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form action="/vet/medical-records" method="POST">
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="petId" class="form-label">Chọn thú cưng</label>
+                        <select class="form-select" id="petId" name="petId" required>
+                            <option value="">-- Chọn thú cưng --</option>
+                            <% if (availablePets && availablePets.length > 0) { %>
+                                <% availablePets.forEach(pet => { %>
+                                    <option value="<%= pet._id %>"><%= pet.name %> - <%= pet.type %> (<%= pet.ownerName %>)</option>
+                                <% }); %>
+                            <% } %>
+                        </select>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="diagnosis" class="form-label">Chẩn đoán</label>
+                        <input type="text" class="form-control" id="diagnosis" name="diagnosis" required>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="symptoms" class="form-label">Triệu chứng (phân cách bằng dấu phẩy)</label>
+                        <input type="text" class="form-control" id="symptoms" name="symptoms">
+                        <div class="tag-list" id="tagList"></div>
+                    </div>          
+                    <div class="mb-3">
+                        <label for="notes" class="form-label">Ghi chú</label>
+                        <textarea class="form-control" id="notes" name="notes" rows="2"></textarea>
+                    </div>   
+                    <hr>
+                    
+                    <!-- Phần kê đơn thuốc -->
+                    <div class="mb-3">
+                        <div class="form-check mb-2">
+                            <input class="form-check-input" type="checkbox" id="includePrescription" name="includePrescription">
+                            <label class="form-check-label" for="includePrescription">
+                                <strong>Kê đơn thuốc cho bệnh án này</strong>
+                            </label>
+                        </div>
+                    </div>
+                    
+                    <div id="prescriptionSection" style="display: none;">
+                        <div class="mb-3">
+                            <label class="form-label">Danh sách thuốc</label>
+                            <div class="medication-form">
+                                <div class="medication-item mb-3 p-3 border rounded">
+                                    <div class="row mb-2">
+                                        <div class="col-md-6">
+                                            <label class="form-label">Tên thuốc</label>
+                                            <input type="text" class="form-control" name="medications[name][]">
+                                        </div>
+                                        <div class="col-md-6">
+                                            <label class="form-label">Liều lượng</label>
+                                            <input type="text" class="form-control" name="medications[dosage][]">
+                                        </div>
+                                    </div>
+                                    <div class="row mb-2">
+                                        <div class="col-md-6">
+                                            <label class="form-label">Tần suất</label>
+                                            <input type="text" class="form-control" name="medications[frequency][]" placeholder="VD: 2 lần/ngày">
+                                        </div>
+                                        <div class="col-md-6">
+                                            <label class="form-label">Thời gian dùng</label>
+                                            <input type="text" class="form-control" name="medications[duration][]" placeholder="VD: 7 ngày">
+                                        </div>
+                                    </div>
+                                    <div class="row">
+                                        <div class="col-12">
+                                            <label class="form-label">Ghi chú về thuốc</label>
+                                            <input type="text" class="form-control" name="medications[notes][]" placeholder="Hướng dẫn sử dụng, lưu ý...">
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <button type="button" class="btn btn-outline-primary btn-sm" id="addMedicationBtn">
+                                <i class="fas fa-plus me-1"></i> Thêm thuốc
+                            </button>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="instructions" class="form-label">Hướng dẫn sử dụng</label>
+                            <textarea class="form-control" id="instructions" name="instructions" rows="2"></textarea>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                    <button type="submit" class="btn btn-yellow">Lưu bệnh án</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+    // Hiển thị tag khi nhập triệu chứng
+    document.getElementById('symptoms').addEventListener('input', function() {
+        const tagList = document.getElementById('tagList');
+        const symptoms = this.value.split(',');
+        
+        // Xóa tất cả tag hiện tại
+        tagList.innerHTML = '';
+        
+        // Thêm tag mới
+        symptoms.forEach(symptom => {
+            if (symptom.trim()) {
+                const tag = document.createElement('span');
+                tag.className = 'symptom-tag';
+                tag.textContent = symptom.trim();
+                tag.style.margin = '3px';
+                tag.style.display = 'inline-block';
+                tagList.appendChild(tag);
+            }
+        });
+    });
+    
+    // Hiển thị/ẩn phần kê đơn thuốc
+    document.getElementById('includePrescription').addEventListener('change', function() {
+        const prescriptionSection = document.getElementById('prescriptionSection');
+        if (this.checked) {
+            prescriptionSection.style.display = 'block';
+        } else {
+            prescriptionSection.style.display = 'none';
+        }
+    });
+    
+    // Thêm loại thuốc mới vào form
+    document.getElementById('addMedicationBtn').addEventListener('click', function() {
+        const medicationForm = document.querySelector('.medication-form');
+        const newItem = document.querySelector('.medication-item').cloneNode(true);
+        
+        // Xóa dữ liệu đã nhập trong các trường
+        const inputs = newItem.querySelectorAll('input');
+        inputs.forEach(input => input.value = '');
+        
+        // Thêm nút xóa
+        const deleteBtn = document.createElement('button');
+        deleteBtn.className = 'btn btn-sm btn-outline-danger position-absolute';
+        deleteBtn.style.top = '10px';
+        deleteBtn.style.right = '10px';
+        deleteBtn.innerHTML = '<i class="fas fa-times"></i>';
+        deleteBtn.addEventListener('click', function() {
+            newItem.remove();
+        });
+        
+        // Thêm class position-relative cho item mới
+        newItem.classList.add('position-relative');
+        newItem.appendChild(deleteBtn);
+        
+        medicationForm.appendChild(newItem);
+    });
+    
+    // Lọc bệnh án theo tìm kiếm
+    document.getElementById('searchInput').addEventListener('input', function() {
+        const searchTerm = this.value.toLowerCase();
+        const records = document.querySelectorAll('.record-card');
+        
+        records.forEach(record => {
+            const petName = record.querySelector('.record-header h5').textContent.toLowerCase();
+            const diagnosis = record.querySelector('.record-info div:nth-child(1) div').textContent.toLowerCase();
+            const symptoms = Array.from(record.querySelectorAll('.symptom-tag')).map(tag => tag.textContent.toLowerCase());
+            
+            if (petName.includes(searchTerm) || 
+                diagnosis.includes(searchTerm) || 
+                symptoms.some(symptom => symptom.includes(searchTerm))) {
+                record.closest('.col-lg-6').style.display = '';
+            } else {
+                record.closest('.col-lg-6').style.display = 'none';
+            }
+        });
+    });
+    
+    // Sắp xếp bệnh án
+    document.getElementById('sortOrder').addEventListener('change', function() {
+        const sortOption = this.value;
+        const recordsContainer = document.querySelector('.row:last-child');
+        const records = Array.from(recordsContainer.querySelectorAll('.col-lg-6'));
+        
+        records.sort((a, b) => {
+            if (sortOption === 'newest') {
+                const dateA = new Date(a.querySelector('small:nth-child(1)').textContent.split('/').reverse().join('-'));
+                const dateB = new Date(b.querySelector('small:nth-child(1)').textContent.split('/').reverse().join('-'));
+                return dateB - dateA;
+            } else if (sortOption === 'oldest') {
+                const dateA = new Date(a.querySelector('small:nth-child(1)').textContent.split('/').reverse().join('-'));
+                const dateB = new Date(b.querySelector('small:nth-child(1)').textContent.split('/').reverse().join('-'));
+                return dateA - dateB;
+            } else if (sortOption === 'petName') {
+                const nameA = a.querySelector('.record-header h5').textContent;
+                const nameB = b.querySelector('.record-header h5').textContent;
+                return nameA.localeCompare(nameB);
+            }
+        });
+        
+        // Xóa các phần tử hiện tại
+        records.forEach(record => record.remove());
+        
+        // Thêm lại theo thứ tự đã sắp xếp
+        records.forEach(record => recordsContainer.appendChild(record));
+    });
+    // Xử lý nút xóa bệnh án
+document.querySelectorAll('.delete-record').forEach(button => {
+    button.addEventListener('click', function(e) {
+        e.preventDefault();
+        const recordId = this.getAttribute('data-id');
+        
+        // Cập nhật recordId trong form xóa
+        document.getElementById('recordIdToDelete').value = recordId;
+        
+        // Hiển thị modal xác nhận
+        const deleteModal = new bootstrap.Modal(document.getElementById('deleteRecordModal'));
+        deleteModal.show();
+    });
+});
+</script>
+<!-- Modal xác nhận xóa bệnh án -->
+<div class="modal fade" id="deleteRecordModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Xác nhận xóa bệnh án</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>Bạn có chắc chắn muốn xóa bệnh án này?</p>
+                <p class="text-danger">Lưu ý: Hành động này không thể hoàn tác và cũng sẽ xóa các đơn thuốc liên quan.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                <form id="deleteRecordForm" action="/vet/medical-records/delete" method="POST">
+                    <input type="hidden" id="recordIdToDelete" name="recordId">
+                    <button type="submit" class="btn btn-danger">Xóa</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+</body>
+</html>

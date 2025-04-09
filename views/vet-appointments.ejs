@@ -1,0 +1,333 @@
+<!-- views/vet-appointments.ejs -->
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Danh sách lịch hẹn - Bác sĩ thú y</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body {
+            background-color: #ffffff;
+            color: #333;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        .vet-sidebar {
+            background-color: #343a40;
+            color: #fff;
+            min-height: 100vh;
+            padding-top: 15px;
+        }
+        .vet-sidebar .nav-link {
+            color: rgba(255, 255, 255, 0.75);
+            padding: 10px 20px;
+            border-radius: 0;
+            margin-bottom: 5px;
+        }
+        .vet-sidebar .nav-link:hover, .vet-sidebar .nav-link.active {
+            color: #fff;
+            background-color: rgba(255, 255, 255, 0.1);
+        }
+        .vet-sidebar .nav-link i {
+            margin-right: 10px;
+            width: 20px;
+            text-align: center;
+        }
+        .content-wrapper {
+            padding: 20px;
+        }
+        .appointment-card {
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            margin-bottom: 20px;
+        }
+        .appointment-header {
+            padding: 15px;
+            border-bottom: 1px solid #eee;
+            font-weight: 600;
+        }
+        .appointment-body {
+            padding: 15px;
+        }
+        .appointment-info {
+            margin-bottom: 10px;
+        }
+        .filter-card {
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        .btn-yellow {
+            background-color: #f7c800;
+            color: white;
+            border: none;
+        }
+        .btn-yellow:hover {
+            background-color: #e6b800;
+            color: white;
+        }
+        .appointment-row {
+            position: relative;
+            transition: all 0.3s ease;
+        }
+        
+        .appointment-row:hover {
+            background-color: #f8f9fa;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+        
+        .delete-appointment {
+            position: absolute;
+            right: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+            background-color: #ff4d4d;
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            z-index: 10;
+        }
+        
+        .appointment-row:hover .delete-appointment {
+            opacity: 1;
+            visibility: visible;
+        }
+        
+        .delete-appointment:hover {
+            background-color: #ff3333;
+            transform: translateY(-50%) scale(1.1);
+        }
+    </style>
+</head>
+<body>
+
+<div class="container-fluid">
+    <div class="row">
+        <!-- Sidebar -->
+        <div class="col-md-3 col-lg-2 d-md-block vet-sidebar collapse">
+            <div class="text-center mb-4 pt-3">
+                <i class="fas fa-user-md fa-3x mb-2"></i>
+                <h5><%= user.name %></h5>
+                <small>Bác sĩ thú y</small>
+            </div>
+            <hr>
+            <ul class="nav flex-column">
+                <li class="nav-item">
+                    <a class="nav-link" href="/vet/dashboard">
+                        <i class="fas fa-tachometer-alt"></i> Dashboard
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="/vet/pets">
+                        <i class="fas fa-paw"></i> Thú cưng
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link active" href="/vet/appointments">
+                        <i class="fas fa-calendar-check"></i> Lịch hẹn
+                    </a>
+                </li>
+                <li class="nav-item">
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="/vet/medical-records">
+                        <i class="fas fa-notes-medical"></i> Bệnh án
+                    </a>
+                </li>
+                <li class="nav-item">
+                </li>
+            </ul>
+        </div>
+
+        <!-- Main Content -->
+        <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4 content-wrapper">
+            <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+                <h1 class="h2">Danh sách lịch hẹn</h1>
+                <div class="btn-toolbar mb-2 mb-md-0">
+                    <div class="btn-group me-2">
+                        <button type="button" class="btn btn-sm btn-outline-secondary">
+                            <i class="fas fa-filter me-1"></i> Lọc
+                        </button>
+                        <button type="button" class="btn btn-sm btn-outline-secondary">
+                            <i class="fas fa-print me-1"></i> In
+                        </button>
+                    </div>
+                    <button type="button" class="btn btn-sm btn-yellow">
+                        <i class="fas fa-plus me-1"></i> Thêm lịch hẹn mới
+                    </button>
+                </div>
+            </div>
+
+            <!-- Filter Options -->
+            <div class="filter-card">
+                <div class="row">
+                    <div class="col-md-3 mb-2">
+                        <label for="dateFilter" class="form-label">Ngày</label>
+                        <input type="date" class="form-control" id="dateFilter">
+                    </div>
+                    <div class="col-md-3 mb-2">
+                        <label for="statusFilter" class="form-label">Trạng thái</label>
+                        <select class="form-select" id="statusFilter">
+                            <option value="">Tất cả</option>
+                            <option value="pending">Chờ xác nhận</option>
+                            <option value="confirmed">Đã xác nhận</option>
+                            <option value="completed">Hoàn thành</option>
+                            <option value="cancelled">Đã hủy</option>
+                        </select>
+                    </div>
+                    <div class="col-md-3 mb-2">
+                        <label for="serviceFilter" class="form-label">Dịch vụ</label>
+                        <select class="form-select" id="serviceFilter">
+                            <option value="">Tất cả</option>
+                            <option value="khám sức khỏe">Khám sức khỏe</option>
+                            <option value="tắm">Tắm</option>
+                            <option value="cắt tỉa lông">Cắt tỉa lông</option>
+                            <option value="lưu trú">Lưu trú</option>
+                        </select>
+                    </div>
+                    <div class="col-md-3 mb-2 d-flex align-items-end">
+                        <button type="button" class="btn btn-primary w-100">
+                            <i class="fas fa-search me-1"></i> Tìm kiếm
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Ngày</th>
+                            <th>Giờ</th>
+                            <th>Thú cưng</th>
+                            <th>Khách hàng</th>
+                            <th>Dịch vụ</th>
+                            <th>Trạng thái</th>
+                            <th>Thao tác</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <% if (appointments && appointments.length > 0) { %>
+                            <% appointments.forEach((appointment, index) => { %>
+                                <tr class="appointment-row">
+                                    <td><%= index + 1 %></td>
+                                    <td><%= new Date(appointment.date).toLocaleDateString('vi-VN') %></td>
+                                    <td><%= appointment.time %></td>
+                                    <td><%= appointment.petName %></td>
+                                    <td><%= appointment.customerName %></td>
+                                    <td><%= appointment.service %></td>
+                                    <td>
+                                        <% if (appointment.status === 'pending') { %>
+                                            <span class="badge bg-warning text-dark">Chờ xác nhận</span>
+                                        <% } else if (appointment.status === 'confirmed') { %>
+                                            <span class="badge bg-primary">Đã xác nhận</span>
+                                        <% } else if (appointment.status === 'completed') { %>
+                                            <span class="badge bg-success">Hoàn thành</span>
+                                        <% } else if (appointment.status === 'cancelled') { %>
+                                            <span class="badge bg-danger">Đã hủy</span>
+                                        <% } %>
+                                    </td>
+                                    <td>
+                                        <form action="/vet/appointments/<%= appointment._id %>/confirm" method="POST" style="display: inline;">
+                                            <button type="submit" class="btn btn-sm btn-outline-success" 
+                                                <%= appointment.status !== 'pending' ? 'disabled' : '' %>>
+                                                <i class="fas fa-check"></i>
+                                            </button>
+                                        </form>
+                                        <form action="/vet/appointments/<%= appointment._id %>/cancel" method="POST" style="display: inline;">
+                                            <button type="submit" class="btn btn-sm btn-outline-danger"
+                                                <%= appointment.status !== 'pending' ? 'disabled' : '' %>>
+                                                <i class="fas fa-times"></i>
+                                            </button>
+                                        </form>
+                                        
+                                        <!-- Nút xóa sẽ xuất hiện khi hover -->
+                                        <button class="delete-appointment" data-id="<%= appointment._id %>">
+                                            <i class="fas fa-trash-alt"></i>
+                                        </button>
+                                    </td>
+                                </tr>
+                            <% }) %>
+                        <% } else { %>
+                            <tr>
+                                <td colspan="8" class="text-center">Không tìm thấy lịch hẹn nào</td>
+                            </tr>
+                        <% } %>
+                    </tbody>
+                </table>
+            </div>
+            
+            <!-- Modal xác nhận xóa -->
+            <div class="modal fade" id="deleteConfirmModal" tabindex="-1" aria-hidden="true">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title">Xác nhận xóa</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body">
+                            <p>Bạn có chắc chắn muốn xóa lịch hẹn này khỏi danh sách?</p>
+                            <p class="text-danger">Lưu ý: Hành động này không thể hoàn tác.</p>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                            <form id="deleteAppointmentForm" action="/vet/appointments/delete" method="POST">
+                                <input type="hidden" id="appointmentIdToDelete" name="appointmentId">
+                                <button type="submit" class="btn btn-danger">Xóa</button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Pagination -->
+            <nav aria-label="Page navigation">
+                <ul class="pagination justify-content-center">
+                    <li class="page-item disabled">
+                        <a class="page-link" href="#" tabindex="-1" aria-disabled="true">Trước</a>
+                    </li>
+                    <li class="page-item active"><a class="page-link" href="#">1</a></li>
+                    <li class="page-item"><a class="page-link" href="#">2</a></li>
+                    <li class="page-item"><a class="page-link" href="#">3</a></li>
+                    <li class="page-item">
+                        <a class="page-link" href="#">Sau</a>
+                    </li>
+                </ul>
+            </nav>
+        </main>
+    </div>
+</div>
+<script>
+    // Xử lý nút xóa lịch hẹn
+    document.querySelectorAll('.delete-appointment').forEach(button => {
+        button.addEventListener('click', function(e) {
+            e.preventDefault();
+            const appointmentId = this.getAttribute('data-id');
+            
+            // Cập nhật appointmentId trong form xóa
+            document.getElementById('appointmentIdToDelete').value = appointmentId;
+            
+            // Hiển thị modal xác nhận
+            const deleteModal = new bootstrap.Modal(document.getElementById('deleteConfirmModal'));
+            deleteModal.show();
+        });
+    });
+</script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
