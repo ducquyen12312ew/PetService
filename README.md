@@ -41,11 +41,11 @@ localhost:5000
 ```
 To close the server, press `control + C` on the terminal window. 
 # Vet mode
-You can open the admin site to view the database in a user-friendly GUI. Open the following link:
+You can open the vet site to view the database in a user-friendly GUI. Open the following link:
 ```bash
 localhost:5000/admin-secret
 ```
-Then, log in using admin account:
+Then, log in using vet account:
 - Username: `vet`
 - Password: `vet`
 
