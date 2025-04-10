@@ -1,4 +1,4 @@
-# Pet Service - By Quyền
+# Pet Service - By QuyenKOL
 # Installation
 ## 1. Clone the repository
 ```bash
