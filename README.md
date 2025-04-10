@@ -1,4 +1,7 @@
 # Pet Service - By QuyenKOL
+```bash
+Videos and demo images are located in Project-Media.
+```
 # Installation
 ## 1. Clone the repository
 ```bash
