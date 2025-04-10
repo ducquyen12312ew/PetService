@@ -40,7 +40,7 @@ Once the above script executes successfully, the local server will be launched. 
 localhost:5000
 ```
 To close the server, press `control + C` on the terminal window. 
-# Admin mode
+# Vet mode
 You can open the admin site to view the database in a user-friendly GUI. Open the following link:
 ```bash
 localhost:5000/admin-secret
