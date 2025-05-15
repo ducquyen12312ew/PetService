@@ -1,0 +1,919 @@
+<!-- views/admin-appointments.ejs -->
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quản lý lịch hẹn - Admin</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/fullcalendar@5.11.3/main.min.css">
+    <style>
+        body {
+            background-color: #ffffff;
+            color: #333;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        .admin-sidebar {
+            background-color: #343a40;
+            color: #fff;
+            min-height: 100vh;
+            padding-top: 15px;
+        }
+        .admin-sidebar .nav-link {
+            color: rgba(255, 255, 255, 0.75);
+            padding: 10px 20px;
+            border-radius: 0;
+            margin-bottom: 5px;
+        }
+        .admin-sidebar .nav-link:hover, .admin-sidebar .nav-link.active {
+            color: #fff;
+            background-color: rgba(255, 255, 255, 0.1);
+        }
+        .admin-sidebar .nav-link i {
+            margin-right: 10px;
+            width: 20px;
+            text-align: center;
+        }
+        .content-wrapper {
+            padding: 20px;
+        }
+        .calendar-card {
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            margin-bottom: 20px;
+            padding: 20px;
+        }
+        .btn-yellow {
+            background-color: #f7c800;
+            color: white;
+            border: none;
+        }
+        .btn-yellow:hover {
+            background-color: #e6b800;
+            color: white;
+        }
+        /* FullCalendar custom styles */
+        .fc-event {
+            cursor: pointer;
+            border: none !important;
+            padding: 3px 5px;
+        }
+        .fc-daygrid-event-dot {
+            display: none;
+        }
+        .fc-event-khám-sức-khỏe {
+            background-color: #4e73df;
+            color: white;
+        }
+        .fc-event-tắm {
+            background-color: #36b9cc;
+            color: white;
+        }
+        .fc-event-cắt-tỉa-lông {
+            background-color: #1cc88a;
+            color: white;
+        }
+        .fc-event-lưu-trú {
+            background-color: #f6c23e;
+            color: white;
+        }
+        .fc-event-pending {
+            border-left: 4px solid #f6c23e !important;
+        }
+        .fc-event-confirmed {
+            border-left: 4px solid #4e73df !important;
+        }
+        .fc-event-completed {
+            border-left: 4px solid #1cc88a !important;
+        }
+        .fc-event-cancelled {
+            border-left: 4px solid #e74a3b !important;
+            opacity: 0.7;
+        }
+        .fc-day-today {
+            background-color: rgba(247, 200, 0, 0.1) !important;
+        }
+        .fc-toolbar-title {
+            font-size: 1.5rem !important;
+            font-weight: 600 !important;
+        }
+        .appointment-list {
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        .appointment-item {
+            background-color: #f8f9fa;
+            border-radius: 8px;
+            margin-bottom: 10px;
+            padding: 15px;
+            border-left: 4px solid #f7c800;
+            transition: transform 0.2s ease;
+        }
+        .appointment-item:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.1);
+        }
+        .appointment-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+        }
+        .appointment-time {
+            font-weight: 600;
+        }
+        .appointment-service {
+            margin-right: 10px;
+        }
+        .appointment-details {
+            display: flex;
+            justify-content: space-between;
+        }
+        .appointment-pet {
+            color: #666;
+        }
+        .appointment-pending {
+            border-left-color: #f6c23e;
+        }
+        .appointment-confirmed {
+            border-left-color: #4e73df;
+        }
+        .appointment-completed {
+            border-left-color: #1cc88a;
+        }
+        .appointment-cancelled {
+            border-left-color: #e74a3b;
+            opacity: 0.7;
+        }
+        /* Filter panel */
+        .filter-card {
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        .legend {
+            display: flex;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 15px;
+            margin-top: 15px;
+        }
+        .legend-item {
+            display: flex;
+            align-items: center;
+        }
+        .legend-color {
+            width: 15px;
+            height: 15px;
+            border-radius: 3px;
+            margin-right: 5px;
+        }
+        .color-health {
+            background-color: #4e73df;
+        }
+        .color-bath {
+            background-color: #36b9cc;
+        }
+        .color-grooming {
+            background-color: #1cc88a;
+        }
+        .color-boarding {
+            background-color: #f6c23e;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container-fluid">
+    <div class="row">
+        <!-- Sidebar -->
+        <div class="col-md-3 col-lg-2 d-md-block admin-sidebar collapse">
+            <div class="text-center mb-4 pt-3">
+                <i class="fas fa-user-shield fa-3x mb-2"></i>
+                <h5><%= user.name %></h5>
+                <small>Administrator</small>
+            </div>
+            <hr>
+            <ul class="nav flex-column">
+                <li class="nav-item">
+                    <a class="nav-link" href="/admin/dashboard">
+                        <i class="fas fa-tachometer-alt"></i> Dashboard
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="/admin/users">
+                        <i class="fas fa-users"></i> Quản lý tài khoản
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="/admin/pets">
+                        <i class="fas fa-paw"></i> Thú cưng
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link active" href="/admin/appointments">
+                        <i class="fas fa-calendar-check"></i> Lịch hẹn
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="/logout">
+                        <i class="fas fa-sign-out-alt"></i> Đăng xuất
+                    </a>
+                </li>
+            </ul>
+        </div>
+
+        <!-- Main Content -->
+        <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4 content-wrapper">
+            <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+                <h1 class="h2">Quản lý lịch hẹn</h1>
+                <div class="btn-toolbar mb-2 mb-md-0">
+                    <div class="btn-group me-2">
+                        <button type="button" class="btn btn-sm btn-outline-secondary" id="todayBtn">
+                            <i class="fas fa-calendar-day me-1"></i> Hôm nay
+                        </button>
+                        <button type="button" class="btn btn-sm btn-outline-secondary" id="printBtn">
+                            <i class="fas fa-print me-1"></i> In lịch
+                        </button>
+                    </div>
+                    <button type="button" class="btn btn-sm btn-yellow" data-bs-toggle="modal" data-bs-target="#addAppointmentModal">
+                        <i class="fas fa-plus me-1"></i> Thêm lịch hẹn
+                    </button>
+                </div>
+            </div>
+            
+            <!-- Filter and Legend -->
+            <div class="filter-card">
+                <div class="row">
+                    <div class="col-md-3 mb-2">
+                        <select class="form-select" id="viewType">
+                            <option value="dayGridMonth">Tháng</option>
+                            <option value="timeGridWeek">Tuần</option>
+                            <option value="timeGridDay">Ngày</option>
+                            <option value="listWeek">Danh sách</option>
+                        </select>
+                    </div>
+                    <div class="col-md-3 mb-2">
+                        <select class="form-select" id="serviceFilter">
+                            <option value="">Tất cả dịch vụ</option>
+                            <option value="khám sức khỏe">Khám sức khỏe</option>
+                            <option value="tắm">Tắm</option>
+                            <option value="cắt tỉa lông">Cắt tỉa lông</option>
+                            <option value="lưu trú">Lưu trú</option>
+                        </select>
+                    </div>
+                    <div class="col-md-3 mb-2">
+                        <select class="form-select" id="statusFilter">
+                            <option value="">Tất cả trạng thái</option>
+                            <option value="pending">Chờ xác nhận</option>
+                            <option value="confirmed">Đã xác nhận</option>
+                            <option value="completed">Hoàn thành</option>
+                            <option value="cancelled">Đã hủy</option>
+                        </select>
+                    </div>
+                    <div class="col-md-3 mb-2">
+                        <button type="button" class="btn btn-primary w-100" id="applyFilterBtn">
+                            <i class="fas fa-filter me-1"></i> Áp dụng
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="legend">
+                    <div class="legend-item">
+                        <div class="legend-color color-health"></div>
+                        <span>Khám sức khỏe</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-color color-bath"></div>
+                        <span>Tắm</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-color color-grooming"></div>
+                        <span>Cắt tỉa lông</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-color color-boarding"></div>
+                        <span>Lưu trú</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-lg-8">
+                    <!-- Calendar -->
+                    <div class="calendar-card">
+                        <div id="calendar"></div>
+                    </div>
+                </div>
+                
+                <div class="col-lg-4">
+                    <!-- Daily Appointments -->
+                    <div class="calendar-card">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <h5 class="mb-0" id="selectedDateTitle">Lịch hẹn hôm nay</h5>
+                            <span class="badge bg-primary" id="appointmentCount">0</span>
+                        </div>
+                        
+                        <div class="appointment-list" id="appointmentList">
+                            <!-- Appointments will be loaded here -->
+                            <div class="text-center py-4 text-muted" id="noAppointmentsMsg">
+                                <i class="fas fa-calendar-times fa-3x mb-3"></i>
+                                <p>Không có lịch hẹn nào vào ngày này</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+</div>
+
+<!-- Appointment Detail Modal -->
+<div class="modal fade" id="appointmentDetailModal" tabindex="-1" aria-labelledby="appointmentDetailModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="appointmentDetailModalLabel">Chi tiết lịch hẹn</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div id="appointmentDetailContent">
+                    <!-- Appointment details will be loaded here -->
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
+                <button type="button" class="btn btn-primary" id="editAppointmentBtn">Chỉnh sửa</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Add Appointment Modal -->
+<div class="modal fade" id="addAppointmentModal" tabindex="-1" aria-labelledby="addAppointmentModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title" id="addAppointmentModalLabel">Thêm lịch hẹn mới</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form action="/admin/appointments/add" method="POST" id="addAppointmentForm">
+                <div class="modal-body">
+                    <!-- Customer Info -->
+                    <h6 class="mb-3">Thông tin khách hàng</h6>
+                    <div class="mb-3">
+                        <label for="customerName" class="form-label">Tên khách hàng</label>
+                        <input type="text" class="form-control" id="customerName" name="customerName" required>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="customerPhone" class="form-label">Số điện thoại</label>
+                                <input type="tel" class="form-control" id="customerPhone" name="customerPhone" required>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="customerEmail" class="form-label">Email</label>
+                                <input type="email" class="form-control" id="customerEmail" name="customerEmail" required>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Pet Info -->
+                    <h6 class="mb-3 mt-4">Thông tin thú cưng</h6>
+                    <div class="mb-3">
+                        <label for="petName" class="form-label">Tên thú cưng</label>
+                        <input type="text" class="form-control" id="petName" name="petName" required>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="petType" class="form-label">Loại thú cưng</label>
+                                <select class="form-select" id="petType" name="petType" required>
+                                    <option value="">Chọn loại</option>
+                                    <option value="dog">Chó</option>
+                                    <option value="cat">Mèo</option>
+                                    <option value="bird">Chim</option>
+                                    <option value="rabbit">Thỏ</option>
+                                    <option value="other">Khác</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="petBreed" class="form-label">Giống</label>
+                                <input type="text" class="form-control" id="petBreed" name="petBreed">
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Appointment Details -->
+                    <h6 class="mb-3 mt-4">Chi tiết lịch hẹn</h6>
+                    <div class="mb-3">
+                        <label for="service" class="form-label">Dịch vụ</label>
+                        <select class="form-select" id="service" name="service" required>
+                            <option value="">Chọn dịch vụ</option>
+                            <option value="khám sức khỏe">Khám sức khỏe</option>
+                            <option value="tắm">Tắm</option>
+                            <option value="cắt tỉa lông">Cắt tỉa lông</option>
+                            <option value="lưu trú">Lưu trú</option>
+                        </select>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="appointmentDate" class="form-label">Ngày</label>
+                                <input type="date" class="form-control" id="appointmentDate" name="date" required>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="appointmentTime" class="form-label">Giờ</label>
+                                <select class="form-select" id="appointmentTime" name="time" required>
+                                    <option value="">Chọn giờ</option>
+                                    <option value="09:00">09:00</option>
+                                    <option value="10:00">10:00</option>
+                                    <option value="11:00">11:00</option>
+                                    <option value="14:00">14:00</option>
+                                    <option value="15:00">15:00</option>
+                                    <option value="16:00">16:00</option>
+                                    <option value="17:00">17:00</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="notes" class="form-label">Ghi chú</label>
+                        <textarea class="form-control" id="notes" name="notes" rows="3"></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                    <button type="submit" class="btn btn-primary">Lưu lịch hẹn</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/fullcalendar@5.11.3/main.min.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Initialize appointments data
+        const appointments = <%- JSON.stringify(appointments) %>;
+        
+        // Parse and format appointments for FullCalendar
+        const events = appointments.map(appointment => {
+            // Create date object from appointment date and time
+            const dateStr = new Date(appointment.date).toISOString().slice(0, 10);
+            const startDate = new Date(`${dateStr}T${appointment.time}`);
+            
+            // Calculate end time (default 1 hour later)
+            const endDate = new Date(startDate);
+            endDate.setHours(endDate.getHours() + 1);
+            
+            // Generate event colors based on service type
+            let backgroundColor;
+            let borderColor;
+            
+            switch (appointment.service) {
+                case 'khám sức khỏe':
+                    backgroundColor = '#4e73df';
+                    break;
+                case 'tắm':
+                    backgroundColor = '#36b9cc';
+                    break;
+                case 'cắt tỉa lông':
+                    backgroundColor = '#1cc88a';
+                    break;
+                case 'lưu trú':
+                    backgroundColor = '#f6c23e';
+                    break;
+                default:
+                    backgroundColor = '#858796';
+            }
+            
+            return {
+                id: appointment._id,
+                title: `${appointment.customerName} - ${appointment.petName}`,
+                start: startDate,
+                end: endDate,
+                backgroundColor: backgroundColor,
+                borderColor: backgroundColor,
+                classNames: [`fc-event-${appointment.service.replace(/ /g, '-')}`, `fc-event-${appointment.status}`],
+                extendedProps: appointment
+            };
+        });
+        
+        // Initialize FullCalendar
+        const calendarEl = document.getElementById('calendar');
+        const calendar = new FullCalendar.Calendar(calendarEl, {
+            initialView: 'dayGridMonth',
+            headerToolbar: {
+                left: 'prev,next today',
+                center: 'title',
+                right: 'dayGridMonth,timeGridWeek,timeGridDay,listWeek'
+            },
+            dayMaxEvents: true,
+            navLinks: true,
+            locale: 'vi',
+            buttonText: {
+                today: 'Hôm nay',
+                month: 'Tháng',
+                week: 'Tuần',
+                day: 'Ngày',
+                list: 'Danh sách'
+            },
+            events: events,
+            eventClick: function(info) {
+                showAppointmentDetails(info.event.extendedProps);
+            },
+            dateClick: function(info) {
+                loadDailyAppointments(info.date);
+            }
+        });
+        
+        calendar.render();
+        
+        // Set today as the default selected date for daily appointments
+        loadDailyAppointments(new Date());
+        
+        // Handle today button click
+        document.getElementById('todayBtn').addEventListener('click', function() {
+            calendar.today();
+            loadDailyAppointments(new Date());
+        });
+        
+        // Handle view type change
+        document.getElementById('viewType').addEventListener('change', function() {
+            calendar.changeView(this.value);
+        });
+        
+        // Handle print button click
+        document.getElementById('printBtn').addEventListener('click', function() {
+            window.print();
+        });
+        
+        // Apply filters to calendar
+        document.getElementById('applyFilterBtn').addEventListener('click', function() {
+            const serviceFilter = document.getElementById('serviceFilter').value;
+            const statusFilter = document.getElementById('statusFilter').value;
+            
+            // Filter events
+            const filteredEvents = appointments.filter(appointment => {
+                // Check service filter
+                if (serviceFilter && appointment.service !== serviceFilter) {
+                    return false;
+                }
+                
+                // Check status filter
+                if (statusFilter && appointment.status !== statusFilter) {
+                    return false;
+                }
+                
+                return true;
+            }).map(appointment => {
+                // Create date object from appointment date and time
+                const dateStr = new Date(appointment.date).toISOString().slice(0, 10);
+                const startDate = new Date(`${dateStr}T${appointment.time}`);
+                
+                // Calculate end time (default 1 hour later)
+                const endDate = new Date(startDate);
+                endDate.setHours(endDate.getHours() + 1);
+                
+                // Generate event colors based on service type
+                let backgroundColor;
+                
+                switch (appointment.service) {
+                    case 'khám sức khỏe':
+                        backgroundColor = '#4e73df';
+                        break;
+                    case 'tắm':
+                        backgroundColor = '#36b9cc';
+                        break;
+                    case 'cắt tỉa lông':
+                        backgroundColor = '#1cc88a';
+                        break;
+                    case 'lưu trú':
+                        backgroundColor = '#f6c23e';
+                        break;
+                    default:
+                        backgroundColor = '#858796';
+                }
+                
+                return {
+                    id: appointment._id,
+                    title: `${appointment.customerName} - ${appointment.petName}`,
+                    start: startDate,
+                    end: endDate,
+                    backgroundColor: backgroundColor,
+                    borderColor: backgroundColor,
+                    classNames: [`fc-event-${appointment.service.replace(/ /g, '-')}`, `fc-event-${appointment.status}`],
+                    extendedProps: appointment
+                };
+            });
+            
+            // Remove all events and add filtered ones
+            calendar.removeAllEvents();
+            calendar.addEventSource(filteredEvents);
+            
+            // Update daily appointments based on current selected date
+            const selectedDate = calendar.getDate();
+            loadDailyAppointments(selectedDate, serviceFilter, statusFilter);
+        });
+        
+        // Function to load and display daily appointments
+        function loadDailyAppointments(date, serviceFilter = '', statusFilter = '') {
+            // Format date for display
+            const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+            const formattedDate = date.toLocaleDateString('vi-VN', options);
+            
+            // Update title
+            document.getElementById('selectedDateTitle').textContent = `Lịch hẹn ${formattedDate}`;
+            
+            // Filter appointments for the selected date
+            const dateStr = date.toISOString().slice(0, 10);
+            const dailyAppointments = appointments.filter(appointment => {
+                const appointmentDate = new Date(appointment.date).toISOString().slice(0, 10);
+                
+                // Check date
+                if (appointmentDate !== dateStr) {
+                    return false;
+                }
+                
+                // Check service filter
+                if (serviceFilter && appointment.service !== serviceFilter) {
+                    return false;
+                }
+                
+                // Check status filter
+                if (statusFilter && appointment.status !== statusFilter) {
+                    return false;
+                }
+                
+                return true;
+            }).sort((a, b) => {
+                // Sort by time
+                return a.time.localeCompare(b.time);
+            });
+            
+            // Update appointment count
+            document.getElementById('appointmentCount').textContent = dailyAppointments.length;
+            
+            // Get appointment list container
+            const appointmentList = document.getElementById('appointmentList');
+            const noAppointmentsMsg = document.getElementById('noAppointmentsMsg');
+            
+            // Clear current appointments
+            appointmentList.innerHTML = '';
+            
+            // Display no appointments message if empty
+            if (dailyAppointments.length === 0) {
+                appointmentList.appendChild(noAppointmentsMsg);
+                return;
+            }
+            
+            // Create and append appointment items
+            dailyAppointments.forEach(appointment => {
+                const appointmentItem = document.createElement('div');
+                appointmentItem.className = `appointment-item appointment-${appointment.status}`;
+                appointmentItem.onclick = function() {
+                    showAppointmentDetails(appointment);
+                };
+                
+                // Format appointment contents
+                let serviceLabel = '';
+                let statusLabel = '';
+                
+                switch (appointment.service) {
+                    case 'khám sức khỏe':
+                        serviceLabel = '<span class="badge bg-primary">Khám sức khỏe</span>';
+                        break;
+                    case 'tắm':
+                        serviceLabel = '<span class="badge bg-info">Tắm</span>';
+                        break;
+                    case 'cắt tỉa lông':
+                        serviceLabel = '<span class="badge bg-success">Cắt tỉa lông</span>';
+                        break;
+                    case 'lưu trú':
+                        serviceLabel = '<span class="badge bg-warning text-dark">Lưu trú</span>';
+                        break;
+                }
+                
+                switch (appointment.status) {
+                    case 'pending':
+                        statusLabel = '<span class="badge bg-warning text-dark">Chờ xác nhận</span>';
+                        break;
+                    case 'confirmed':
+                        statusLabel = '<span class="badge bg-primary">Đã xác nhận</span>';
+                        break;
+                    case 'completed':
+                        statusLabel = '<span class="badge bg-success">Hoàn thành</span>';
+                        break;
+                    case 'cancelled':
+                        statusLabel = '<span class="badge bg-danger">Đã hủy</span>';
+                        break;
+                }
+                
+                appointmentItem.innerHTML = `
+                    <div class="appointment-header">
+                        <div class="appointment-time">${appointment.time}</div>
+                        <div>
+                            ${serviceLabel}
+                            ${statusLabel}
+                        </div>
+                    </div>
+                    <div class="appointment-details">
+                        <div class="appointment-customer">${appointment.customerName}</div>
+                        <div class="appointment-pet">${appointment.petName} (${appointment.petType})</div>
+                    </div>
+                `;
+                
+                appointmentList.appendChild(appointmentItem);
+            });
+        }
+        
+        // Function to show appointment details in modal
+        function showAppointmentDetails(appointment) {
+            // Format appointment details for modal
+            let statusLabel = '';
+            
+            switch (appointment.status) {
+                case 'pending':
+                    statusLabel = '<span class="badge bg-warning text-dark">Chờ xác nhận</span>';
+                    break;
+                case 'confirmed':
+                    statusLabel = '<span class="badge bg-primary">Đã xác nhận</span>';
+                    break;
+                case 'completed':
+                    statusLabel = '<span class="badge bg-success">Hoàn thành</span>';
+                    break;
+                case 'cancelled':
+                    statusLabel = '<span class="badge bg-danger">Đã hủy</span>';
+                    break;
+            }
+            
+            const dateStr = new Date(appointment.date).toLocaleDateString('vi-VN');
+            
+            // Populate modal content
+            const detailContent = `
+                <div class="mb-4 text-center">
+                    <h4 class="mb-1">${appointment.customerName}</h4>
+                    <div class="text-muted mb-2">${dateStr} lúc ${appointment.time}</div>
+                    <div>
+                        <span class="badge bg-${getServiceColor(appointment.service)}">${appointment.service}</span>
+                        ${statusLabel}
+                    </div>
+                </div>
+                
+                <div class="card mb-3">
+                    <div class="card-header">
+                        <h6 class="mb-0"><i class="fas fa-user me-2"></i> Thông tin khách hàng</h6>
+                    </div>
+                    <div class="card-body">
+                        <p><strong>Họ tên:</strong> ${appointment.customerName}</p>
+                        <p><strong>Email:</strong> ${appointment.customerEmail}</p>
+                        <p><strong>Điện thoại:</strong> ${appointment.customerPhone}</p>
+                    </div>
+                </div>
+                
+                <div class="card mb-3">
+                    <div class="card-header">
+                        <h6 class="mb-0"><i class="fas fa-paw me-2"></i> Thông tin thú cưng</h6>
+                    </div>
+                    <div class="card-body">
+                        <p><strong>Tên:</strong> ${appointment.petName}</p>
+                        <p><strong>Loại:</strong> ${appointment.petType}</p>
+                        <p><strong>Giống:</strong> ${appointment.petBreed || 'Không xác định'}</p>
+                    </div>
+                </div>
+                
+                ${appointment.notes ? `
+                <div class="card">
+                    <div class="card-header">
+                        <h6 class="mb-0"><i class="fas fa-sticky-note me-2"></i> Ghi chú</h6>
+                    </div>
+                    <div class="card-body">
+                        <p>${appointment.notes}</p>
+                    </div>
+                </div>
+                ` : ''}
+                
+                <div class="mt-3 d-flex justify-content-center gap-2">
+                    ${appointment.status === 'pending' ? `
+                        <button class="btn btn-sm btn-success" onclick="confirmAppointment('${appointment._id}')">
+                            <i class="fas fa-check me-1"></i> Xác nhận
+                        </button>
+                        <button class="btn btn-sm btn-danger" onclick="cancelAppointment('${appointment._id}')">
+                            <i class="fas fa-times me-1"></i> Hủy lịch
+                        </button>
+                    ` : appointment.status === 'confirmed' ? `
+                        <button class="btn btn-sm btn-success" onclick="completeAppointment('${appointment._id}')">
+                            <i class="fas fa-check-double me-1"></i> Hoàn thành
+                        </button>
+                        <button class="btn btn-sm btn-danger" onclick="cancelAppointment('${appointment._id}')">
+                            <i class="fas fa-times me-1"></i> Hủy lịch
+                        </button>
+                    ` : ''}
+                </div>
+            `;
+            
+            document.getElementById('appointmentDetailContent').innerHTML = detailContent;
+            
+            // Store appointment ID for edit button
+            document.getElementById('editAppointmentBtn').setAttribute('data-id', appointment._id);
+            
+            // Show modal
+            const appointmentDetailModal = new bootstrap.Modal(document.getElementById('appointmentDetailModal'));
+            appointmentDetailModal.show();
+        }
+        
+        // Helper function to get color class for service
+        function getServiceColor(service) {
+            switch (service) {
+                case 'khám sức khỏe':
+                    return 'primary';
+                case 'tắm':
+                    return 'info';
+                case 'cắt tỉa lông':
+                    return 'success';
+                case 'lưu trú':
+                    return 'warning';
+                default:
+                    return 'secondary';
+            }
+        }
+        
+        // Appointment action functions
+        window.confirmAppointment = function(id) {
+            if (confirm('Xác nhận lịch hẹn này?')) {
+                fetch(`/admin/appointments/${id}/confirm`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                })
+                .then(response => {
+                    if (response.ok) {
+                        window.location.reload();
+                    } else {
+                        alert('Có lỗi xảy ra khi cập nhật trạng thái.');
+                    }
+                });
+            }
+        };
+        
+        window.cancelAppointment = function(id) {
+            if (confirm('Bạn có chắc muốn hủy lịch hẹn này?')) {
+                fetch(`/admin/appointments/${id}/cancel`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                })
+                .then(response => {
+                    if (response.ok) {
+                        window.location.reload();
+                    } else {
+                        alert('Có lỗi xảy ra khi cập nhật trạng thái.');
+                    }
+                });
+            }
+        };
+        
+        window.completeAppointment = function(id) {
+            if (confirm('Đánh dấu lịch hẹn này là đã hoàn thành?')) {
+                fetch(`/admin/appointments/${id}/complete`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                })
+                .then(response => {
+                    if (response.ok) {
+                        window.location.reload();
+                    } else {
+                        alert('Có lỗi xảy ra khi cập nhật trạng thái.');
+                    }
+                });
+            }
+        };
+        
+        // Edit appointment
+        document.getElementById('editAppointmentBtn').addEventListener('click', function() {
+            const appointmentId = this.getAttribute('data-id');
+            window.location.href = `/admin/appointments/${appointmentId}/edit`;
+        });
+        
+        // Set default date in add appointment form to today
+        const today = new Date().toISOString().split('T')[0];
+        document.getElementById('appointmentDate').value = today;
+    });
+</script>
+</body>
+</html>
