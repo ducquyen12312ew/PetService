@@ -1,0 +1,95 @@
+<!-- views/login.ejs -->
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><%= typeof redirectTo !== 'undefined' && redirectTo === 'admin' ? 'Đăng nhập quản trị' : 'Đăng nhập' %></title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body {
+            background-color: #f8f9fa;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        .login-container {
+            max-width: 450px;
+            margin: 80px auto;
+            padding: 30px;
+            background-color: white;
+            border-radius: 10px;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+        }
+        .login-header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .btn-yellow {
+            background-color: #f7c800;
+            color: white;
+            border: none;
+        }
+        .btn-yellow:hover {
+            background-color: #e6b800;
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="login-container">
+            <div class="login-header">
+                <i class="fas fa-paw fa-3x text-warning mb-3"></i>
+                <% if (typeof redirectTo !== 'undefined' && redirectTo === 'admin') { %>
+                    <h2>Đăng nhập quản trị</h2>
+                    <p class="text-muted">Đăng nhập để truy cập hệ thống quản trị</p>
+                <% } else { %>
+                    <h2>Đăng nhập</h2>
+                    <p class="text-muted">Đăng nhập để truy cập thông tin thú cưng của bạn</p>
+                <% } %>
+            </div>
+
+            <% if (typeof error !== 'undefined') { %>
+                <div class="alert alert-danger" role="alert">
+                    <%= error %>
+                </div>
+            <% } %>
+
+            <form action="<%= typeof redirectTo !== 'undefined' && redirectTo === 'admin' ? '/admin-login' : '/login' %>" method="POST">
+                <% if (typeof redirectTo !== 'undefined') { %>
+                    <input type="hidden" name="redirectTo" value="<%= redirectTo %>">
+                <% } %>
+
+                <div class="mb-3">
+                    <label for="username" class="form-label">Tên đăng nhập hoặc Email</label>
+                    <div class="input-group">
+                        <span class="input-group-text"><i class="fas fa-user"></i></span>
+                        <input type="text" class="form-control" id="username" name="username" required>
+                    </div>
+                </div>
+                
+                <div class="mb-4">
+                    <label for="password" class="form-label">Mật khẩu</label>
+                    <div class="input-group">
+                        <span class="input-group-text"><i class="fas fa-lock"></i></span>
+                        <input type="password" class="form-control" id="password" name="password" required>
+                    </div>
+                </div>
+                
+                <div class="d-grid gap-2">
+                    <button type="submit" class="btn btn-yellow btn-lg">Đăng nhập</button>
+                </div>
+            </form>
+            
+            <div class="mt-4 text-center">
+                <% if (typeof redirectTo !== 'undefined' && redirectTo === 'admin') { %>
+                    <p><a href="/" class="text-muted text-decoration-none">Quay lại trang chủ</a></p>
+                <% } else { %>
+                    <p>Chưa có tài khoản? <a href="/signup" class="text-warning text-decoration-none">Đăng ký ngay</a></p>
+                    <p><a href="/" class="text-muted text-decoration-none">Quay lại trang chủ</a></p>
+                <% } %>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

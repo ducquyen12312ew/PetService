@@ -7,7 +7,6 @@ connect.then(() => {
 .catch(() => {
     console.log("Database cannot be Connected");
 });
-
 const UserSchema = new mongoose.Schema({
     name: {
         type: String,
@@ -18,15 +17,17 @@ const UserSchema = new mongoose.Schema({
         required: true
     },
     email: {
-        type: String
+        type: String,
+        required: true,
+        unique: true
     },
     phone: {
         type: String
     },
     role: {
         type: String,
-        enum: ['admin', 'vet', 'staff'], 
-        default: 'staff'
+        enum: ['admin', 'vet', 'staff', 'user'], 
+        default: 'user'
     },
     createdAt: {
         type: Date,

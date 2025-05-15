@@ -137,7 +137,214 @@ app.post("/appointment", async (req, res) => {
         res.status(500).render("appointment", { error: "Lỗi đặt lịch" });
     }
 });
+// Add these routes to src/index.js
 
+// Login page route
+app.get("/login", (req, res) => {
+    const redirectTo = req.query.redirect || "";
+    res.render("login", { redirectTo });
+});
+app.post("/login", async (req, res) => {
+    try {
+        const { username, password } = req.body;
+        const redirectTo = req.body.redirectTo || "";
+
+        // Tìm người dùng bằng tên đăng nhập hoặc email
+        const user = await UserCollection.findOne({
+            $or: [
+                { name: username },
+                { email: username }
+            ]
+        });
+        
+        if (!user) {
+            return res.render("login", { 
+                error: "Tài khoản không tồn tại", 
+                redirectTo 
+            });
+        }
+
+        // Trong môi trường thật, bạn nên sử dụng bcrypt.compare
+        const validPassword = password === user.password;
+        
+        if (!validPassword) {
+            return res.render("login", { 
+                error: "Mật khẩu không đúng", 
+                redirectTo 
+            });
+        }
+
+        // Lưu thông tin người dùng vào session
+        req.session.name = user.name;
+        req.session.role = user.role;
+        req.session.userId = user._id;
+
+        // Chuyển hướng dựa trên vai trò
+        if (user.role === 'admin') {
+            return res.redirect("/admin/dashboard");
+        } else if (user.role === 'vet') {
+            return res.redirect("/vet/dashboard");
+        } else {
+            // Người dùng thông thường
+            return res.redirect("/user/dashboard");
+        }
+    } catch (error) {
+        console.error("Login error:", error);
+        res.status(500).render("login", { 
+            error: "Lỗi đăng nhập", 
+            redirectTo: req.body.redirectTo || "" 
+        });
+    }
+});
+
+// Logout route
+app.get("/logout", (req, res) => {
+    req.session.destroy();
+    res.redirect("/");
+});
+
+// User dashboard route
+app.get("/user/dashboard", async (req, res) => {
+    // Check if user is logged in
+    if (!req.session.userId) {
+        return res.redirect("/login");
+    }
+    
+    try {
+        // Get the current user
+        const currentUser = await UserCollection.findById(req.session.userId);
+        if (!currentUser) {
+            req.session.destroy();
+            return res.redirect("/login");
+        }
+        
+        // Find user's pets using multiple methods
+        let userPets = await PetCollection.find({ 
+            $or: [
+                { ownerName: currentUser.name },
+                { ownerEmail: currentUser.email },
+                { ownerPhone: currentUser.phone }
+            ]
+        }).sort({ registeredAt: -1 });
+        
+        // If no pets found directly, try finding through appointments
+        if (userPets.length === 0) {
+            console.log("No pets found directly, searching through appointments...");
+            const userAppointments = await AppointmentCollection.find({
+                $or: [
+                    { customerEmail: currentUser.email },
+                    { customerName: currentUser.name },
+                    { customerPhone: currentUser.phone }
+                ]
+            });
+            
+            console.log(`Found ${userAppointments.length} appointments for this user`);
+            
+            // Create a unique set of pet identifiers from appointments
+            const petIdentifiers = new Set();
+            userAppointments.forEach(appointment => {
+                petIdentifiers.add(JSON.stringify({
+                    name: appointment.petName,
+                    phone: appointment.customerPhone
+                }));
+            });
+            
+            // Find pets based on appointments
+            for (const identifierJson of petIdentifiers) {
+                const identifier = JSON.parse(identifierJson);
+                const pet = await PetCollection.findOne({
+                    name: identifier.name,
+                    ownerPhone: identifier.phone
+                });
+                
+                if (pet) {
+                    userPets.push(pet);
+                    console.log(`Found pet through appointment: ${pet.name}`);
+                }
+            }
+        }
+
+        // Add prescriptions and appointments to each pet
+        const processedPets = await Promise.all(userPets.map(async (pet) => {
+            const prescriptions = await PrescriptionCollection.find({ pet: pet._id })
+                .sort({ date: -1 })
+                .limit(1);
+
+            const appointments = await AppointmentCollection.find({ 
+                petName: pet.name,
+                customerPhone: pet.ownerPhone
+            })
+            .sort({ date: -1 })
+            .limit(1);
+
+            const petObj = typeof pet.toObject === 'function' ? pet.toObject() : pet;
+            petObj.prescriptions = prescriptions;
+            petObj.appointments = appointments;
+            
+            return petObj;
+        }));
+        
+        console.log(`Displaying ${processedPets.length} pets to user ${currentUser.name}`);
+        
+        // Pass both user and userPets to the template
+        res.render("user", { 
+            user: {
+                name: currentUser.name,
+                email: currentUser.email,
+                role: currentUser.role
+            },
+            userPets: processedPets 
+        });
+    } catch (error) {
+        console.error("Error fetching user data:", error);
+        res.status(500).render("error", { 
+            message: "Error loading user dashboard",
+            error: process.env.NODE_ENV === 'development' ? error : {}
+        });
+    }
+});
+
+// Signup page route
+app.get("/signup", (req, res) => {
+    res.render("signup");
+});
+
+// Signup form submission
+app.post("/signup", async (req, res) => {
+    try {
+        const { fullName, email, password, confirmPassword, phone } = req.body;
+        
+        // Check if passwords match
+        if (password !== confirmPassword) {
+            return res.render("signup", { error: "Mật khẩu không khớp" });
+        }
+        
+        // Check if email already exists
+        const existingEmail = await UserCollection.findOne({ email: email });
+        if (existingEmail) {
+            return res.render("signup", { error: "Email đã được sử dụng" });
+        }
+        
+        // Create new user with email as name/username
+        const newUser = await UserCollection.create({
+            name: fullName,
+            password: password, // In production, use bcrypt.hash
+            email: email,
+            phone: phone,
+            role: 'user'
+        });
+        
+        // Set session
+        req.session.userId = newUser._id;
+        req.session.name = newUser.name;
+        req.session.role = 'user';
+        
+        res.redirect("/user/dashboard");
+    } catch (error) {
+        console.error("Signup error:", error);
+        res.status(500).render("signup", { error: "Lỗi đăng ký, vui lòng thử lại" });
+    }
+});
 app.get("/pet-health", (req, res) => {
     res.render("pet-health");
 });
@@ -155,39 +362,63 @@ app.get("/appointment-success", (req, res) => {
 });
 
 app.get("/admin-secret", (req, res) => {
-    res.render("admin-login");
+    res.redirect("/login?redirect=admin");
 });
 
 app.post("/admin-login", async (req, res) => {
     try {
         const { username, password } = req.body;
 
-        const user = await UserCollection.findOne({ name: username });
+        // Tìm người dùng bằng tên đăng nhập hoặc email
+        const user = await UserCollection.findOne({
+            $or: [
+                { name: username },
+                { email: username }
+            ]
+        });
         
         if (!user) {
-            return res.render("admin-login", { error: "Tên đăng nhập không tồn tại" });
+            return res.render("login", { 
+                error: "Tài khoản không tồn tại",
+                redirectTo: "admin" 
+            });
         }
 
         const validPassword = password === user.password; // In real app, use bcrypt.compare
         
         if (!validPassword) {
-            return res.render("admin-login", { error: "Mật khẩu không đúng" });
+            return res.render("login", { 
+                error: "Mật khẩu không đúng",
+                redirectTo: "admin" 
+            });
         }
 
         req.session.name = user.name;
         req.session.role = user.role;
         req.session.userId = user._id;
 
+        // Kiểm tra quyền - chỉ admin và vet mới được truy cập
+        if (user.role !== 'admin' && user.role !== 'vet') {
+            return res.render("login", { 
+                error: "Bạn không có quyền truy cập khu vực này",
+                redirectTo: "admin" 
+            });
+        }
+
+        // Chuyển hướng dựa vào vai trò
         if (user.role === 'admin') {
             return res.redirect("/admin/dashboard");
         } else if (user.role === 'vet') {
             return res.redirect("/vet/dashboard");
         }
 
-        res.redirect("/admin/dashboard");
+        res.redirect("/");
     } catch (error) {
         console.error("Login error:", error);
-        res.status(500).render("admin-login", { error: "Lỗi đăng nhập" });
+        res.status(500).render("login", { 
+            error: "Lỗi đăng nhập",
+            redirectTo: "admin"
+        });
     }
 });
 
@@ -677,13 +908,13 @@ app.get("/vet/pets/:id/prescription", async (req, res) => {
         res.status(500).send("Error loading form");
     }
 });
-
 app.post("/vet/appointments/:id/confirm", async (req, res) => {
     if (req.session.role !== 'vet' && req.session.role !== 'admin') {
         return res.redirect("/admin-secret");
     }
     
     try {
+        // Update appointment status
         await AppointmentCollection.findByIdAndUpdate(
             req.params.id, 
             { 
@@ -692,6 +923,33 @@ app.post("/vet/appointments/:id/confirm", async (req, res) => {
             }
         );
 
+        // Get the updated appointment with complete data
+        const appointment = await AppointmentCollection.findById(req.params.id);
+        if (!appointment) {
+            return res.redirect("/vet/appointments");
+        }
+
+        // Check if pet exists
+        let pet = await PetCollection.findOne({
+            name: appointment.petName,
+            ownerPhone: appointment.customerPhone
+        });
+
+        // If pet doesn't exist, create it
+        if (!pet) {
+            console.log(`Creating new pet from confirmed appointment: ${appointment.petName}`);
+            pet = new PetCollection({
+                name: appointment.petName,
+                type: appointment.petType,
+                breed: appointment.petBreed || 'Không xác định',
+                ownerName: appointment.customerName,
+                ownerPhone: appointment.customerPhone,
+                ownerEmail: appointment.customerEmail
+            });
+            await pet.save();
+        }
+
+        console.log(`Appointment confirmed: ID ${appointment._id}, Pet: ${pet.name}`);
         res.redirect("/vet/appointments");
     } catch (error) {
         console.error("Error confirming appointment:", error);
@@ -790,6 +1048,173 @@ async function createDefaultVet() {
         console.error('Error creating accounts:', error);
     }
 }
+
+// Routes for the admin section in index.js
+// Thêm vào hàm createDefaultVet hoặc chạy riêng
+async function createAdminAccount() {
+    try {
+        const adminExists = await UserCollection.findOne({ email: 'admin@example.com' });
+        if (!adminExists) {
+            await UserCollection.create({
+                name: 'admin',
+                password: 'admin123',
+                role: 'admin',
+                email: 'admin@example.com',
+                phone: '0123456789'
+            });
+            
+            console.log('Admin account with email admin@example.com created');
+        } else {
+            console.log('Admin account with email admin@example.com already exists');
+        }
+    } catch (error) {
+        console.error('Error creating admin account:', error);
+    }
+}
+
+// Gọi hàm để tạo tài khoản
+createAdminAccount();
+// Admin dashboard
+app.get("/admin/dashboard", async (req, res) => {
+    if (req.session.role !== 'admin') {
+        return res.redirect("/admin-secret");
+    }
+    
+    try {
+        // Get counts of different types of users
+        const totalUsers = await UserCollection.countDocuments();
+        const adminUsers = await UserCollection.countDocuments({ role: 'admin' });
+        const vetUsers = await UserCollection.countDocuments({ role: 'vet' });
+        const staffUsers = await UserCollection.countDocuments({ role: 'staff' });
+        
+        res.render("admin-dashboard", { 
+            stats: {
+                totalUsers,
+                adminUsers,
+                vetUsers,
+                staffUsers
+            }
+        });
+    } catch (error) {
+        console.error("Dashboard error:", error);
+        res.status(500).send("Error loading dashboard");
+    }
+});
+
+// User management view
+app.get("/admin/users", async (req, res) => {
+    if (req.session.role !== 'admin') {
+        return res.redirect("/admin-secret");
+    }
+    
+    try {
+        const users = await UserCollection.find().sort({ createdAt: -1 });
+        res.render("admin-users", { users });
+    } catch (error) {
+        console.error("Error fetching users:", error);
+        res.status(500).send("Error loading users");
+    }
+});
+
+// Add new user
+app.post("/admin/users/add", async (req, res) => {
+    if (req.session.role !== 'admin') {
+        return res.redirect("/admin-secret");
+    }
+    
+    try {
+        const { username, password, email, phone, role } = req.body;
+        
+        // Check if username already exists
+        const existingUser = await UserCollection.findOne({ name: username });
+        if (existingUser) {
+            // In a real app, you would handle this error better
+            return res.status(400).send("Username already exists");
+        }
+        
+        // Validate role
+        if (!['admin', 'vet', 'staff'].includes(role)) {
+            return res.status(400).send("Invalid role");
+        }
+        
+        // Create user
+        await UserCollection.create({
+            name: username,
+            password, // In a production app, you should hash this password
+            email,
+            phone,
+            role
+        });
+        
+        res.redirect("/admin/users");
+    } catch (error) {
+        console.error("Error adding user:", error);
+        res.status(500).send("Error adding user");
+    }
+});
+
+// Update user
+app.post("/admin/users/update", async (req, res) => {
+    if (req.session.role !== 'admin') {
+        return res.redirect("/admin-secret");
+    }
+    
+    try {
+        const { userId, email, phone, newRole, resetPassword, newPassword } = req.body;
+        
+        // Don't allow changing own role (to prevent admin from removing their own access)
+        if (userId === req.session.userId && newRole !== 'admin') {
+            return res.status(400).send("You cannot change your own role from admin");
+        }
+        
+        // Validate new role
+        if (!['admin', 'vet', 'staff'].includes(newRole)) {
+            return res.status(400).send("Invalid role");
+        }
+        
+        const updateData = {
+            email,
+            phone,
+            role: newRole
+        };
+        
+        // Update password if requested
+        if (resetPassword === 'on' && newPassword) {
+            updateData.password = newPassword; // In a production app, you should hash this password
+        }
+        
+        await UserCollection.findByIdAndUpdate(userId, updateData);
+        
+        res.redirect("/admin/users");
+    } catch (error) {
+        console.error("Error updating user:", error);
+        res.status(500).send("Error updating user");
+    }
+});
+
+// Delete user
+app.post("/admin/users/delete", async (req, res) => {
+    if (req.session.role !== 'admin') {
+        return res.redirect("/admin-secret");
+    }
+    
+    try {
+        const { userId } = req.body;
+        
+        // Don't allow deleting own account
+        if (userId === req.session.userId) {
+            return res.status(400).send("You cannot delete your own account");
+        }
+        
+        await UserCollection.findByIdAndDelete(userId);
+        
+        res.redirect("/admin/users");
+    } catch (error) {
+        console.error("Error deleting user:", error);
+        res.status(500).send("Error deleting user");
+    }
+});
+
 const port = 5000;
 app.listen(port, () => {
     createDefaultVet();

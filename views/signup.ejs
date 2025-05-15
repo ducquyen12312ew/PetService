@@ -1,0 +1,118 @@
+<!-- views/signup.ejs -->
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Đăng ký tài khoản</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body {
+            background-color: #f8f9fa;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        .signup-container {
+            max-width: 550px;
+            margin: 60px auto;
+            padding: 30px;
+            background-color: white;
+            border-radius: 10px;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+        }
+        .signup-header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .btn-yellow {
+            background-color: #f7c800;
+            color: white;
+            border: none;
+        }
+        .btn-yellow:hover {
+            background-color: #e6b800;
+            color: white;
+        }
+        .form-floating > label {
+            color: #6c757d;
+        }
+        .form-control:focus {
+            border-color: #f7c800;
+            box-shadow: 0 0 0 0.25rem rgba(247, 200, 0, 0.25);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="signup-container">
+            <div class="signup-header">
+                <i class="fas fa-user-plus fa-3x text-warning mb-3"></i>
+                <h2>Đăng ký tài khoản</h2>
+                <p class="text-muted">Tạo tài khoản để quản lý thông tin thú cưng của bạn</p>
+            </div>
+
+            <% if (typeof error !== 'undefined') { %>
+                <div class="alert alert-danger" role="alert">
+                    <%= error %>
+                </div>
+            <% } %>
+
+            <form action="/signup" method="POST">
+                <div class="row mb-3">
+                    <div class="col-12">
+                        <div class="form-floating">
+                            <input type="text" class="form-control" id="fullName" name="fullName" placeholder="Họ và tên" required>
+                            <label for="fullName"><i class="fas fa-user me-2"></i>Họ và tên</label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row mb-3">
+                    <div class="col-md-6 mb-3 mb-md-0">
+                        <div class="form-floating">
+                            <input type="email" class="form-control" id="email" name="email" placeholder="Email" required>
+                            <label for="email"><i class="fas fa-envelope me-2"></i>Email</label>
+                        </div>    
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-floating">
+                            <input type="tel" class="form-control" id="phone" name="phone" placeholder="Số điện thoại" required>
+                            <label for="phone"><i class="fas fa-phone me-2"></i>Số điện thoại</label>
+                        </div>
+                    </div>
+                </div>
+                <div class="row mb-3">
+                    <div class="col-md-6 mb-3 mb-md-0">
+                        <div class="form-floating">
+                            <input type="password" class="form-control" id="password" name="password" placeholder="Mật khẩu" required>
+                            <label for="password"><i class="fas fa-lock me-2"></i>Mật khẩu</label>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-floating">
+                            <input type="password" class="form-control" id="confirmPassword" name="confirmPassword" placeholder="Xác nhận mật khẩu" required>
+                            <label for="confirmPassword"><i class="fas fa-lock me-2"></i>Xác nhận mật khẩu</label>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="mb-3 form-check">
+                    <input type="checkbox" class="form-check-input" id="agreeTerms" name="agreeTerms" required>
+                    <label class="form-check-label" for="agreeTerms">
+                        Tôi đồng ý với <a href="#" class="text-warning">điều khoản</a> và <a href="#" class="text-warning">chính sách bảo mật</a>
+                    </label>
+                </div>
+                
+                <div class="d-grid gap-2 mt-4">
+                    <button type="submit" class="btn btn-yellow btn-lg">Đăng ký</button>
+                </div>
+            </form>
+            
+            <div class="mt-4 text-center">
+                <p>Đã có tài khoản? <a href="/login" class="text-warning text-decoration-none">Đăng nhập</a></p>
+                <p><a href="/" class="text-muted text-decoration-none">Quay lại trang chủ</a></p>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

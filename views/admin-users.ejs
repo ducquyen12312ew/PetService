@@ -1,0 +1,466 @@
+<!-- views/admin-users.ejs -->
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quản lý tài khoản - Admin</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body {
+            background-color: #ffffff;
+            color: #333;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        .admin-sidebar {
+            background-color: #343a40;
+            color: #fff;
+            min-height: 100vh;
+            padding-top: 15px;
+        }
+        .admin-sidebar .nav-link {
+            color: rgba(255, 255, 255, 0.75);
+            padding: 10px 20px;
+            border-radius: 0;
+            margin-bottom: 5px;
+        }
+        .admin-sidebar .nav-link:hover, .admin-sidebar .nav-link.active {
+            color: #fff;
+            background-color: rgba(255, 255, 255, 0.1);
+        }
+        .admin-sidebar .nav-link i {
+            margin-right: 10px;
+            width: 20px;
+            text-align: center;
+        }
+        .content-wrapper {
+            padding: 20px;
+        }
+        .user-card {
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            margin-bottom: 20px;
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+        .user-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+        .user-header {
+            padding: 15px;
+            border-bottom: 1px solid #eee;
+            position: relative;
+        }
+        .user-body {
+            padding: 15px;
+        }
+        .user-role {
+            position: absolute;
+            right: 15px;
+            top: 15px;
+        }
+        .filter-card {
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        .btn-yellow {
+            background-color: #f7c800;
+            color: white;
+            border: none;
+        }
+        .btn-yellow:hover {
+            background-color: #e6b800;
+            color: white;
+        }
+        .role-admin {
+            background-color: #dc3545;
+        }
+        .role-vet {
+            background-color: #28a745;
+        }
+        .role-staff {
+            background-color: #007bff;
+        }
+        .table-hover tbody tr {
+            transition: background-color 0.3s;
+        }
+        .table-hover tbody tr:hover {
+            background-color: rgba(247, 200, 0, 0.1);
+        }
+    </style>
+</head>
+<body>
+
+<div class="container-fluid">
+    <div class="row">
+        <!-- Sidebar -->
+        <div class="col-md-3 col-lg-2 d-md-block admin-sidebar collapse">
+            <div class="text-center mb-4 pt-3">
+                <i class="fas fa-user-shield fa-3x mb-2"></i>
+                <h5><%= user.name %></h5>
+                <small>Administrator</small>
+            </div>
+            <hr>
+            <ul class="nav flex-column">
+                <li class="nav-item">
+                    <a class="nav-link" href="/admin/dashboard">
+                        <i class="fas fa-tachometer-alt"></i> Dashboard
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link active" href="/admin/users">
+                        <i class="fas fa-users"></i> Quản lý tài khoản
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="/admin/pets">
+                        <i class="fas fa-paw"></i> Thú cưng
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="/admin/appointments">
+                        <i class="fas fa-calendar-check"></i> Lịch hẹn
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="/logout">
+                        <i class="fas fa-sign-out-alt"></i> Đăng xuất
+                    </a>
+                </li>
+            </ul>
+        </div>
+
+        <!-- Main Content -->
+        <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4 content-wrapper">
+            <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+                <h1 class="h2">Quản lý tài khoản</h1>
+                <div class="btn-toolbar mb-2 mb-md-0">
+                    <button type="button" class="btn btn-yellow" data-bs-toggle="modal" data-bs-target="#addUserModal">
+                        <i class="fas fa-user-plus me-1"></i> Thêm tài khoản mới
+                    </button>
+                </div>
+            </div>
+
+            <!-- Filter Options -->
+            <div class="filter-card">
+                <div class="row">
+                    <div class="col-md-4 mb-2">
+                        <input type="text" class="form-control" id="searchInput" placeholder="Tìm kiếm theo tên, email...">
+                    </div>
+                    <div class="col-md-3 mb-2">
+                        <select class="form-select" id="roleFilter">
+                            <option value="">Tất cả vai trò</option>
+                            <option value="admin">Admin</option>
+                            <option value="vet">Bác sĩ thú y</option>
+                            <option value="staff">Người dùng</option>
+                        </select>
+                    </div>
+                    <div class="col-md-3 mb-2">
+                        <select class="form-select" id="sortOrder">
+                            <option value="newest">Mới nhất</option>
+                            <option value="oldest">Cũ nhất</option>
+                            <option value="name">Theo tên</option>
+                        </select>
+                    </div>
+                    <div class="col-md-2 mb-2">
+                        <button type="button" class="btn btn-primary w-100" id="filterBtn">
+                            <i class="fas fa-filter me-1"></i> Lọc
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Users Table -->
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Tên đăng nhập</th>
+                            <th>Email</th>
+                            <th>Điện thoại</th>
+                            <th>Vai trò</th>
+                            <th>Ngày tạo</th>
+                            <th>Thao tác</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <% if (users && users.length > 0) { %>
+                            <% users.forEach((user, index) => { %>
+                                <tr>
+                                    <td><%= index + 1 %></td>
+                                    <td><%= user.name %></td>
+                                    <td><%= user.email || 'Chưa cập nhật' %></td>
+                                    <td><%= user.phone || 'Chưa cập nhật' %></td>
+                                    <td>
+                                        <% if (user.role === 'admin') { %>
+                                            <span class="badge role-admin">Admin</span>
+                                        <% } else if (user.role === 'vet') { %>
+                                            <span class="badge role-vet">Bác sĩ thú y</span>
+                                        <% } else { %>
+                                            <span class="badge role-staff">Người dùng</span>
+                                        <% } %>
+                                    </td>
+                                    <td><%= new Date(user.createdAt).toLocaleDateString('vi-VN') %></td>
+                                    <td>
+                                        <button class="btn btn-sm btn-outline-primary edit-user-btn" 
+                                                data-id="<%= user._id %>"
+                                                data-name="<%= user.name %>"
+                                                data-email="<%= user.email || '' %>"
+                                                data-phone="<%= user.phone || '' %>"
+                                                data-role="<%= user.role %>">
+                                            <i class="fas fa-edit"></i>
+                                        </button>
+                                        <% if (user._id.toString() !== locals.user.id) { %>
+                                            <button class="btn btn-sm btn-outline-danger delete-user-btn" 
+                                                    data-id="<%= user._id %>"
+                                                    data-name="<%= user.name %>">
+                                                <i class="fas fa-trash"></i>
+                                            </button>
+                                        <% } %>
+                                    </td>
+                                </tr>
+                            <% }); %>
+                        <% } else { %>
+                            <tr>
+                                <td colspan="7" class="text-center">Không tìm thấy tài khoản nào</td>
+                            </tr>
+                        <% } %>
+                    </tbody>
+                </table>
+            </div>
+        </main>
+    </div>
+</div>
+
+<!-- Add User Modal -->
+<div class="modal fade" id="addUserModal" tabindex="-1" aria-labelledby="addUserModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title" id="addUserModalLabel">Thêm tài khoản mới</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form action="/admin/users/add" method="POST">
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="username" class="form-label">Tên đăng nhập</label>
+                        <input type="text" class="form-control" id="username" name="username" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="password" class="form-label">Mật khẩu</label>
+                        <input type="password" class="form-control" id="password" name="password" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="email" class="form-label">Email</label>
+                        <input type="email" class="form-control" id="email" name="email">
+                    </div>
+                    <div class="mb-3">
+                        <label for="phone" class="form-label">Số điện thoại</label>
+                        <input type="text" class="form-control" id="phone" name="phone">
+                    </div>
+                    <div class="mb-3">
+                        <label for="role" class="form-label">Vai trò</label>
+                        <select class="form-select" id="role" name="role" required>
+                            <option value="staff">Người dùng</option>
+                            <option value="vet">Bác sĩ thú y</option>
+                            <option value="admin">Admin</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                    <button type="submit" class="btn btn-primary">Thêm tài khoản</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Edit User Modal -->
+<div class="modal fade" id="editUserModal" tabindex="-1" aria-labelledby="editUserModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title" id="editUserModalLabel">Chỉnh sửa tài khoản</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form action="/admin/users/update" method="POST">
+                <input type="hidden" id="editUserId" name="userId">
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="editUsername" class="form-label">Tên đăng nhập</label>
+                        <input type="text" class="form-control" id="editUsername" name="username" required readonly>
+                    </div>
+                    <div class="mb-3">
+                        <label for="editEmail" class="form-label">Email</label>
+                        <input type="email" class="form-control" id="editEmail" name="email">
+                    </div>
+                    <div class="mb-3">
+                        <label for="editPhone" class="form-label">Số điện thoại</label>
+                        <input type="text" class="form-control" id="editPhone" name="phone">
+                    </div>
+                    <div class="mb-3">
+                        <label for="editRole" class="form-label">Vai trò</label>
+                        <select class="form-select" id="editRole" name="newRole" required>
+                            <option value="staff">Người dùng</option>
+                            <option value="vet">Bác sĩ thú y</option>
+                            <option value="admin">Admin</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="resetPassword" name="resetPassword">
+                            <label class="form-check-label" for="resetPassword">
+                                Đặt lại mật khẩu
+                            </label>
+                        </div>
+                    </div>
+                    <div class="mb-3" id="newPasswordGroup" style="display: none;">
+                        <label for="newPassword" class="form-label">Mật khẩu mới</label>
+                        <input type="password" class="form-control" id="newPassword" name="newPassword">
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                    <button type="submit" class="btn btn-primary">Lưu thay đổi</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Delete User Modal -->
+<div class="modal fade" id="deleteUserModal" tabindex="-1" aria-labelledby="deleteUserModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-danger text-white">
+                <h5 class="modal-title" id="deleteUserModalLabel">Xác nhận xóa tài khoản</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>Bạn có chắc chắn muốn xóa tài khoản <strong id="deleteUserName"></strong>?</p>
+                <p class="text-danger">Lưu ý: Hành động này không thể hoàn tác!</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                <form id="deleteUserForm" action="/admin/users/delete" method="POST">
+                    <input type="hidden" id="deleteUserId" name="userId">
+                    <button type="submit" class="btn btn-danger">Xóa tài khoản</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+    // Show edit user modal
+    document.querySelectorAll('.edit-user-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+            const id = this.getAttribute('data-id');
+            const name = this.getAttribute('data-name');
+            const email = this.getAttribute('data-email');
+            const phone = this.getAttribute('data-phone');
+            const role = this.getAttribute('data-role');
+            
+            document.getElementById('editUserId').value = id;
+            document.getElementById('editUsername').value = name;
+            document.getElementById('editEmail').value = email;
+            document.getElementById('editPhone').value = phone;
+            document.getElementById('editRole').value = role;
+            
+            const editModal = new bootstrap.Modal(document.getElementById('editUserModal'));
+            editModal.show();
+        });
+    });
+    
+    // Show delete user modal
+    document.querySelectorAll('.delete-user-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+            const id = this.getAttribute('data-id');
+            const name = this.getAttribute('data-name');
+            
+            document.getElementById('deleteUserId').value = id;
+            document.getElementById('deleteUserName').textContent = name;
+            
+            const deleteModal = new bootstrap.Modal(document.getElementById('deleteUserModal'));
+            deleteModal.show();
+        });
+    });
+    
+    // Toggle password reset fields
+    document.getElementById('resetPassword').addEventListener('change', function() {
+        const newPasswordGroup = document.getElementById('newPasswordGroup');
+        if (this.checked) {
+            newPasswordGroup.style.display = 'block';
+        } else {
+            newPasswordGroup.style.display = 'none';
+        }
+    });
+    
+// Filter functionality
+document.getElementById('filterBtn').addEventListener('click', function() {
+    const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+    const roleFilter = document.getElementById('roleFilter').value;
+    const rows = document.querySelectorAll('tbody tr');
+    
+    rows.forEach(row => {
+        const name = row.cells[1].textContent.toLowerCase();
+        const email = row.cells[2].textContent.toLowerCase();
+        const phone = row.cells[3].textContent.toLowerCase();
+        
+        // Xác định role thực tế dựa vào class của badge
+        let roleValue = '';
+        const badge = row.querySelector('.badge');
+        if (badge.classList.contains('role-admin')) roleValue = 'admin';
+        else if (badge.classList.contains('role-vet')) roleValue = 'vet';
+        else if (badge.classList.contains('role-staff')) roleValue = 'staff';
+        
+        const matchesSearch = name.includes(searchTerm) || email.includes(searchTerm) || phone.includes(searchTerm);
+        const matchesRole = roleFilter === '' || roleValue === roleFilter;
+        
+        if (matchesSearch && matchesRole) {
+            row.style.display = '';
+        } else {
+            row.style.display = 'none';
+        }
+    });
+});
+    
+    // Sort functionality
+    document.getElementById('sortOrder').addEventListener('change', function() {
+        const sortOption = this.value;
+        const tbody = document.querySelector('tbody');
+        const rows = Array.from(tbody.querySelectorAll('tr'));
+        
+        rows.sort((a, b) => {
+            if (sortOption === 'newest') {
+                const dateA = new Date(a.cells[5].textContent.split('/').reverse().join('-'));
+                const dateB = new Date(b.cells[5].textContent.split('/').reverse().join('-'));
+                return dateB - dateA;
+            } else if (sortOption === 'oldest') {
+                const dateA = new Date(a.cells[5].textContent.split('/').reverse().join('-'));
+                const dateB = new Date(b.cells[5].textContent.split('/').reverse().join('-'));
+                return dateA - dateB;
+            } else if (sortOption === 'name') {
+                const nameA = a.cells[1].textContent;
+                const nameB = b.cells[1].textContent;
+                return nameA.localeCompare(nameB);
+            }
+        });
+        
+        // Remove existing rows
+        rows.forEach(row => row.remove());
+        
+        // Add sorted rows
+        rows.forEach(row => tbody.appendChild(row));
+    });
+</script>
+</body>
+</html>
