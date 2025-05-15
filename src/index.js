@@ -1215,6 +1215,158 @@ app.post("/admin/users/delete", async (req, res) => {
     }
 });
 
+// Add these routes to your existing index.js file
+
+// Admin appointments page
+app.get("/admin/appointments", async (req, res) => {
+    if (req.session.role !== 'admin') {
+        return res.redirect("/admin-secret");
+    }
+    
+    try {
+        const appointments = await AppointmentCollection.find().sort({ date: -1 });
+        
+        // Get all veterinarians for assigning to appointments
+        const vets = await UserCollection.find({ role: 'vet' }).sort({ name: 1 });
+        
+        res.render("admin-appointments", { 
+            appointments, 
+            vets 
+        });
+    } catch (error) {
+        console.error("Error fetching appointments:", error);
+        res.status(500).send("Error loading appointments");
+    }
+});
+
+// Admin - Add new appointment
+app.post("/admin/appointments/add", async (req, res) => {
+    if (req.session.role !== 'admin') {
+        return res.redirect("/admin-secret");
+    }
+    
+    try {
+        const { 
+            customerName, 
+            customerEmail, 
+            customerPhone, 
+            petName, 
+            petType, 
+            petBreed, 
+            service, 
+            date, 
+            time, 
+            notes,
+            status,
+            vetId 
+        } = req.body;
+        
+        // Create new appointment
+        await AppointmentCollection.create({
+            customerName,
+            customerEmail,
+            customerPhone,
+            petName,
+            petType,
+            petBreed,
+            service,
+            date,
+            time,
+            notes,
+            status: status || 'pending',
+            assignedVet: vetId || null,
+            createdAt: new Date()
+        });
+        
+        // Check if pet exists, if not create it
+        const existingPet = await PetCollection.findOne({
+            name: petName,
+            ownerPhone: customerPhone
+        });
+        
+        if (!existingPet) {
+            await PetCollection.create({
+                name: petName,
+                type: petType,
+                breed: petBreed || 'Không xác định',
+                ownerName: customerName,
+                ownerPhone: customerPhone,
+                ownerEmail: customerEmail,
+                registeredAt: new Date()
+            });
+        }
+        
+        res.redirect("/admin/appointments");
+    } catch (error) {
+        console.error("Error adding appointment:", error);
+        res.status(500).send("Error creating appointment");
+    }
+});
+
+// Admin - Update appointment
+app.post("/admin/appointments/update", async (req, res) => {
+    if (req.session.role !== 'admin') {
+        return res.redirect("/admin-secret");
+    }
+    
+    try {
+        const { appointmentId, status, vetId, notes } = req.body;
+        
+        const updateData = {};
+        
+        if (status) updateData.status = status;
+        if (vetId) updateData.assignedVet = vetId;
+        if (notes !== undefined) updateData.notes = notes;
+        
+        await AppointmentCollection.findByIdAndUpdate(appointmentId, updateData);
+        
+        res.redirect("/admin/appointments");
+    } catch (error) {
+        console.error("Error updating appointment:", error);
+        res.status(500).send("Error updating appointment");
+    }
+});
+
+// Admin - Delete appointment
+app.post("/admin/appointments/delete", async (req, res) => {
+    if (req.session.role !== 'admin') {
+        return res.redirect("/admin-secret");
+    }
+    
+    try {
+        const { appointmentId } = req.body;
+        
+        await AppointmentCollection.findByIdAndDelete(appointmentId);
+        
+        res.redirect("/admin/appointments");
+    } catch (error) {
+        console.error("Error deleting appointment:", error);
+        res.status(500).send("Error deleting appointment");
+    }
+});
+
+// Admin - Assign vet to appointment
+app.post("/admin/appointments/assign", async (req, res) => {
+    if (req.session.role !== 'admin') {
+        return res.redirect("/admin-secret");
+    }
+    
+    try {
+        const { appointmentId, vetId } = req.body;
+        
+        await AppointmentCollection.findByIdAndUpdate(appointmentId, {
+            assignedVet: vetId,
+            // If assigning a vet, also confirm the appointment
+            status: 'confirmed'
+        });
+        
+        res.redirect("/admin/appointments");
+    } catch (error) {
+        console.error("Error assigning vet:", error);
+        res.status(500).send("Error assigning vet to appointment");
+    }
+});
+
 const port = 5000;
 app.listen(port, () => {
     createDefaultVet();
