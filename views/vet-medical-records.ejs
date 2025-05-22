@@ -223,62 +223,111 @@
                                 
                                 <div class="record-header d-flex justify-content-between">
                                     <div>
-                                        <h5 class="mb-0"><%= record.pet ? record.pet.name : 'Không xác định' %></h5>
-                                        <small><%= record.pet ? (record.pet.type + ' - ' + (record.pet.breed || 'Không xác định')) : '' %></small>
+                                        <h5 class="mb-0"><%= record.pet.name %></h5>
+                                        <small><%= record.pet.type %> - <%= record.pet.breed || 'Không xác định' %></small>
                                     </div>
                                     <div class="text-end">
-                                        <small class="d-block"><%= new Date(record.date).toLocaleDateString('vi-VN') %></small>
-                                        <small><%= record.veterinarian ? record.veterinarian.name : 'Không xác định' %></small>
+                                        <small class="d-block">Chủ: <%= record.pet.ownerName %></small>
+                                        <small>Khám: <%= new Date(record.lastVisit).toLocaleDateString('vi-VN') %></small>
                                     </div>
                                 </div>
                                 
                                 <div class="record-info">
+                                    <!-- Trạng thái sức khỏe hiện tại -->
                                     <div class="mb-3">
-                                        <strong>Chẩn đoán:</strong>
-                                        <div><%= record.diagnosis || 'Không có' %></div>
+                                        <strong>Trạng thái hiện tại:</strong>
+                                        <% if (record.currentStatus === 'healthy') { %>
+                                            <span class="badge bg-success">Khỏe mạnh</span>
+                                        <% } else if (record.currentStatus === 'sick') { %>
+                                            <span class="badge bg-danger">Đang bệnh</span>
+                                        <% } else if (record.currentStatus === 'recovering') { %>
+                                            <span class="badge bg-warning">Đang hồi phục</span>
+                                        <% } else if (record.currentStatus === 'critical') { %>
+                                            <span class="badge bg-dark">Nguy kịch</span>
+                                        <% } else { %>
+                                            <span class="badge bg-secondary">Chưa xác định</span>
+                                        <% } %>
                                     </div>
-                                    
+            
+                                    <!-- Thống kê -->
                                     <div class="mb-3">
-                                        <strong>Triệu chứng:</strong>
-                                        <div class="mt-1">
-                                            <% if (record.symptoms && record.symptoms.length > 0) { %>
-                                                <% record.symptoms.forEach(symptom => { %>
-                                                    <span class="symptom-tag"><%= symptom %></span>
-                                                <% }); %>
-                                            <% } else { %>
-                                                <span class="text-muted">Không có triệu chứng</span>
-                                            <% } %>
+                                        <strong>Tổng quan:</strong>
+                                        <div class="row mt-2">
+                                            <div class="col-4 text-center">
+                                                <div class="text-primary"><%= record.healthRecords.length %></div>
+                                                <small>Khám sức khỏe</small>
+                                            </div>
+                                            <div class="col-4 text-center">
+                                                <div class="text-success"><%= record.medicalRecords.length %></div>
+                                                <small>Chẩn đoán</small>
+                                            </div>
+                                            <div class="col-4 text-center">
+                                                <div class="text-warning"><%= record.prescriptions.length %></div>
+                                                <small>Đơn thuốc</small>
+                                            </div>
                                         </div>
                                     </div>
-                                    
-                                    <% if (record.notes) { %>
+            
+                                    <!-- Thông tin mới nhất -->
+                                    <% if (record.medicalRecords.length > 0) { %>
                                         <div class="mb-3">
-                                            <strong>Ghi chú:</strong>
-                                            <div><%= record.notes %></div>
+                                            <strong>Chẩn đoán gần nhất:</strong>
+                                            <div><%= record.medicalRecords[0].diagnosis %></div>
+                                            <small class="text-muted">
+                                                <%= new Date(record.medicalRecords[0].date).toLocaleDateString('vi-VN') %>
+                                                - BS: <%= record.medicalRecords[0].veterinarian?.name || 'Không xác định' %>
+                                            </small>
                                         </div>
                                     <% } %>
-                                </div>
-                                
-                                <% if (record.veterinarianComments) { %>
-                                    <div class="record-comment">
-                                        <strong>Comment của bác sĩ:</strong>
-                                        <p class="mb-0 mt-1"><%= record.veterinarianComments %></p>
+            
+                                    <% if (record.prescriptions.length > 0) { %>
+                                        <div class="mb-3">
+                                            <strong>Đơn thuốc gần nhất:</strong>
+                                            <div>
+                                                <% if (record.prescriptions[0].medications && record.prescriptions[0].medications.length > 0) { %>
+                                                    <%= record.prescriptions[0].medications[0].name %>
+                                                    <% if (record.prescriptions[0].medications.length > 1) { %>
+                                                        và <%= record.prescriptions[0].medications.length - 1 %> thuốc khác
+                                                    <% } %>
+                                                <% } else { %>
+                                                    Không có thuốc
+                                                <% } %>
+                                            </div>
+                                            <small class="text-muted">
+                                                <%= new Date(record.prescriptions[0].date).toLocaleDateString('vi-VN') %>
+                                            </small>
+                                        </div>
+                                    <% } %>
+            
+                                    <!-- Buttons để xem chi tiết -->
+                                    <div class="mt-3 text-center">
+                                        <a href="/vet/pets/<%= record.pet._id %>" class="btn btn-sm btn-primary">
+                                            <i class="fas fa-eye me-1"></i> Xem chi tiết đầy đủ
+                                        </a>
+                                        <a href="/vet/pets/<%= record.pet._id %>/health" class="btn btn-sm btn-success">
+                                            <i class="fas fa-plus me-1"></i> Cập nhật sức khỏe
+                                        </a>
+                                        <a href="/vet/pets/<%= record.pet._id %>/medical" class="btn btn-sm btn-warning">
+                                            <i class="fas fa-stethoscope me-1"></i> Thêm chẩn đoán
+                                        </a>
                                     </div>
-                                <% } %>
+                                </div>
                             </div>
                         </div>
                     <% }); %>
                 <% } else { %>
                     <div class="col-12">
-                        <div class="alert alert-info">
-                            <i class="fas fa-info-circle me-2"></i> Chưa có bệnh án nào được tạo.
+                        <div class="alert alert-info text-center">
+                            <i class="fas fa-info-circle me-2"></i> 
+                            <h5>Chưa có bệnh án nào</h5>
+                            <p>Bệnh án sẽ tự động được tạo khi có thú cưng đặt lịch khám sức khỏe và được xác nhận.</p>
+                            <a href="/vet/appointments" class="btn btn-primary">
+                                <i class="fas fa-calendar-check me-1"></i> Xem lịch hẹn
+                            </a>
                         </div>
                     </div>
                 <% } %>
             </div>
-        </main>
-    </div>
-</div>
 
 <!-- Add New Record Modal -->
 <div class="modal fade" id="addRecordModal" tabindex="-1" aria-labelledby="addRecordModalLabel" aria-hidden="true">

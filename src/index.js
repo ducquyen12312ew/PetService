@@ -585,139 +585,113 @@ app.get("/vet/pets/:id/health", async (req, res) => {
         res.status(500).send("Error loading form");
     }
 });
+// Route hiển thị bệnh án tổng hợp
 app.get("/vet/medical-records", async (req, res) => {
     if (req.session.role !== 'vet' && req.session.role !== 'admin') {
         return res.redirect("/admin-secret");
     }
     
     try {
-        const medicalRecords = await MedicalRecordCollection.find()
-            .sort({ date: -1 })
-            .populate({
-                path: 'pet',
-                select: 'name type breed ownerName'
-            })
-            .populate({
-                path: 'veterinarian',
-                select: 'name'
-            });
-
-        const healthCheckPets = await AppointmentCollection.find({
+        console.log("Loading comprehensive medical records...");
+        
+        // Lấy tất cả pets đã có appointment khám sức khỏe
+        const healthCheckAppointments = await AppointmentCollection.find({
             service: 'khám sức khỏe',
             status: { $in: ['confirmed', 'completed'] }
         }).sort({ date: -1 });
 
-        const uniquePetsMap = new Map();
-        
-        for (const appointment of healthCheckPets) {
-            if (!uniquePetsMap.has(appointment.petName + appointment.customerPhone)) {
-                const pet = await PetCollection.findOne({
-                    name: appointment.petName,
-                    ownerPhone: appointment.customerPhone
-                });
-                
-                if (pet) {
-                    uniquePetsMap.set(appointment.petName + appointment.customerPhone, pet);
-                }
-            }
+        console.log(`Found ${healthCheckAppointments.length} health check appointments`);
+
+        // Tạo danh sách bệnh án tổng hợp
+        const comprehensiveMedicalRecords = [];
+        const processedPets = new Set();
+
+        for (const appointment of healthCheckAppointments) {
+            const petKey = `${appointment.petName}-${appointment.customerPhone}`;
+            
+            // Tránh duplicate pets
+            if (processedPets.has(petKey)) continue;
+            processedPets.add(petKey);
+
+            // Tìm pet trong database
+            const pet = await PetCollection.findOne({
+                name: appointment.petName,
+                ownerPhone: appointment.customerPhone
+            });
+
+            if (!pet) continue;
+
+            // Lấy TẤT CẢ thông tin y tế của pet này
+            const healthRecords = await HealthRecordCollection.find({ pet: pet._id })
+                .sort({ date: -1 })
+                .populate('veterinarian', 'name');
+
+            const medicalRecords = await MedicalRecordCollection.find({ pet: pet._id })
+                .sort({ date: -1 })
+                .populate('veterinarian', 'name');
+
+            const prescriptions = await PrescriptionCollection.find({ pet: pet._id })
+                .sort({ date: -1 })
+                .populate('veterinarian', 'name')
+                .populate('medicalRecord', 'diagnosis symptoms');
+
+            // Tạo "bệnh án tổng hợp" cho pet này
+            const comprehensiveRecord = {
+                _id: pet._id, // Dùng pet ID làm ID của bệnh án
+                pet: pet,
+                appointment: appointment,
+                healthRecords: healthRecords,
+                medicalRecords: medicalRecords,
+                prescriptions: prescriptions,
+                lastVisit: appointment.date,
+                totalRecords: healthRecords.length + medicalRecords.length + prescriptions.length,
+                // Status dựa trên health record mới nhất
+                currentStatus: healthRecords.length > 0 ? healthRecords[0].status : 'unknown'
+            };
+
+            comprehensiveMedicalRecords.push(comprehensiveRecord);
+            console.log(`Added comprehensive record for ${pet.name} with ${comprehensiveRecord.totalRecords} total records`);
         }
-        const availablePets = Array.from(uniquePetsMap.values());
-        
+
+        // Sắp xếp theo ngày khám gần nhất
+        comprehensiveMedicalRecords.sort((a, b) => new Date(b.lastVisit) - new Date(a.lastVisit));
+
+        console.log(`Rendering ${comprehensiveMedicalRecords.length} comprehensive medical records`);
+
+        // Không cần availablePets vì sẽ remove phần tạo bệnh án thủ công
         res.render("vet-medical-records", {
-            medicalRecords,
-            availablePets
+            medicalRecords: comprehensiveMedicalRecords,
+            availablePets: [] // Không cho tạo bệnh án thủ công nữa
         });
+        
     } catch (error) {
-        console.error("Error fetching medical records:", error);
+        console.error("Error loading comprehensive medical records:", error);
         res.status(500).send("Error loading medical records");
     }
 });
 
-app.post("/vet/medical-records", async (req, res) => {
+// Route xóa - cần cập nhật để xóa toàn bộ thông tin y tế của pet
+app.post("/vet/medical-records/delete", async (req, res) => {
     if (req.session.role !== 'vet' && req.session.role !== 'admin') {
         return res.redirect("/admin-secret");
     }
     
     try {
-        const { petId, symptoms, diagnosis, notes, followUpDate, veterinarianComments, medications, instructions } = req.body;
-
-        let symptomsArray = [];
-        if (typeof symptoms === 'string') {
-            symptomsArray = symptoms.split(',').map(s => s.trim());
-        } else if (Array.isArray(symptoms)) {
-            symptomsArray = symptoms;
-        }
-
-        const medicalRecord = await MedicalRecordCollection.create({
-            pet: petId,
-            symptoms: symptomsArray,
-            diagnosis,
-            notes,
-            followUpDate,
-            veterinarian: req.session.userId,
-            veterinarianComments
-        });
- 
-        let medsArray = [];
-        if (Array.isArray(medications.name)) {
-            // Nhiều loại thuốc
-            for (let i = 0; i < medications.name.length; i++) {
-                if (medications.name[i]) {
-                    medsArray.push({
-                        name: medications.name[i],
-                        dosage: medications.dosage[i],
-                        frequency: medications.frequency[i],
-                        duration: medications.duration[i],
-                        notes: medications.notes[i]
-                    });
-                }
-            }
-        } else {
-            if (medications.name) {
-                medsArray.push({
-                    name: medications.name,
-                    dosage: medications.dosage,
-                    frequency: medications.frequency,
-                    duration: medications.duration,
-                    notes: medications.notes
-                });
-            }
-        }
-        if (medsArray.length > 0) {
-            await PrescriptionCollection.create({
-                pet: petId,
-                medications: medsArray,
-                instructions,
-                veterinarian: req.session.userId,
-                medicalRecord: medicalRecord._id
-            });
-        }
+        const { recordId } = req.body; // Này sẽ là pet ID
+        
+        console.log(`Deleting all medical data for pet: ${recordId}`);
+        
+        // Xóa tất cả thông tin y tế liên quan đến pet này
+        await PrescriptionCollection.deleteMany({ pet: recordId });
+        await MedicalRecordCollection.deleteMany({ pet: recordId });
+        await HealthRecordCollection.deleteMany({ pet: recordId });
+        
+        console.log(`Deleted all medical data for pet ${recordId}`);
         
         res.redirect("/vet/medical-records");
     } catch (error) {
-        console.error("Error adding medical record:", error);
-        res.status(500).send("Error saving medical record");
-    }
-});
-
-app.post("/vet/prescriptions/:id/status", async (req, res) => {
-    if (req.session.role !== 'vet' && req.session.role !== 'admin') {
-        return res.redirect("/admin-secret");
-    }
-    
-    try {
-        const { status } = req.body;
-        
-        if (!['active', 'completed', 'cancelled'].includes(status)) {
-            return res.status(400).send("Trạng thái không hợp lệ");
-        }
-        
-        await PrescriptionCollection.findByIdAndUpdate(req.params.id, { status });
-        
-        res.status(200).send("Cập nhật thành công");
-    } catch (error) {
-        console.error("Error updating prescription status:", error);
-        res.status(500).send("Error updating status");
+        console.error("Error deleting comprehensive medical record:", error);
+        res.status(500).send("Error deleting medical record");
     }
 });
 
@@ -1101,23 +1075,165 @@ app.get("/admin/dashboard", async (req, res) => {
         res.status(500).send("Error loading dashboard");
     }
 });
-
-// User management view
 app.get("/admin/users", async (req, res) => {
     if (req.session.role !== 'admin') {
         return res.redirect("/admin-secret");
     }
     
     try {
+        // Lấy users như cũ
         const users = await UserCollection.find().sort({ createdAt: -1 });
-        res.render("admin-users", { users });
+        
+        // THÊM: Lấy danh sách pets với thông tin appointments
+        const pets = await PetCollection.find().sort({ registeredAt: -1 });
+        
+        // Thêm thông tin appointments cho mỗi pet
+        const petsWithAppointments = await Promise.all(pets.map(async (pet) => {
+            const appointments = await AppointmentCollection.find({
+                petName: pet.name,
+                customerPhone: pet.ownerPhone
+            }).sort({ date: -1 }).limit(3);
+            
+            const latestAppointment = appointments[0];
+            
+            const petObj = pet.toObject();
+            petObj.appointments = appointments;
+            petObj.latestAppointment = latestAppointment;
+            petObj.totalAppointments = appointments.length;
+            
+            return petObj;
+        }));
+        
+        // Render với cả users và pets
+        res.render("admin-users", { 
+            users,
+            pets: petsWithAppointments  // THÊM pets data
+        });
     } catch (error) {
-        console.error("Error fetching users:", error);
-        res.status(500).send("Error loading users");
+        console.error("Error fetching users and pets:", error);
+        res.status(500).send("Error loading users and pets");
     }
 });
 
-// Add new user
+// THÊM các routes mới cho pet management
+app.post("/admin/users/pets/add", async (req, res) => {
+    if (req.session.role !== 'admin') {
+        return res.redirect("/admin-secret");
+    }
+    
+    try {
+        const { name, type, breed, age, weight, gender, ownerName, ownerPhone, ownerEmail } = req.body;
+        
+        console.log("Admin requesting to add new pet:", name);
+        
+        // Kiểm tra thông tin pet
+        if (!name || !type || !ownerName || !ownerPhone) {
+            console.log("Invalid pet info provided");
+            return res.status(400).json({ 
+                success: false, 
+                message: "Thông tin thú cưng không hợp lệ" 
+            });
+        }
+        
+        // Kiểm tra pet đã tồn tại chưa
+        const existingPet = await PetCollection.findOne({
+            name: name,
+            ownerPhone: ownerPhone
+        });
+        
+        if (existingPet) {
+            console.log("Pet already exists");
+            return res.status(400).json({ 
+                success: false, 
+                message: "Thú cưng này đã được đăng ký" 
+            });
+        }
+        
+        // Tạo pet mới
+        const newPet = await PetCollection.create({
+            name,
+            type,
+            breed: breed || 'Không xác định',
+            age: age ? parseInt(age) : undefined,
+            weight: weight ? parseFloat(weight) : undefined,
+            gender: gender || 'unknown',
+            ownerName,
+            ownerPhone,
+            ownerEmail,
+            registeredAt: new Date()
+        });
+        
+        console.log("Pet created successfully:", newPet._id);
+        
+        res.json({ 
+            success: true, 
+            message: "Thêm thú cưng thành công",
+            pet: newPet
+        });
+        
+    } catch (error) {
+        console.error("Error adding pet:", error);
+        res.status(500).json({ 
+            success: false, 
+            message: "Lỗi khi thêm thú cưng: " + error.message 
+        });
+    }
+});
+
+app.post("/admin/users/pets/update", async (req, res) => {
+    if (req.session.role !== 'admin') {
+        return res.redirect("/admin-secret");
+    }
+    
+    try {
+        const { petId, name, type, breed, age, weight, gender, ownerName, ownerPhone, ownerEmail } = req.body;
+        
+        const updateData = {
+            name,
+            type,
+            breed,
+            ownerName,
+            ownerPhone,
+            ownerEmail
+        };
+        
+        if (age) updateData.age = parseInt(age);
+        if (weight) updateData.weight = parseFloat(weight);
+        if (gender) updateData.gender = gender;
+        
+        await PetCollection.findByIdAndUpdate(petId, updateData);
+        
+        res.redirect("/admin/users");
+    } catch (error) {
+        console.error("Error updating pet:", error);
+        res.status(500).send("Error updating pet");
+    }
+});
+
+app.post("/admin/users/pets/delete", async (req, res) => {
+    if (req.session.role !== 'admin') {
+        return res.redirect("/admin-secret");
+    }
+    
+    try {
+        const { petId } = req.body;
+        
+        // Xóa tất cả dữ liệu liên quan trước
+        await HealthRecordCollection.deleteMany({ pet: petId });
+        await MedicalRecordCollection.deleteMany({ pet: petId });
+        await PrescriptionCollection.deleteMany({ pet: petId });
+        
+        // Xóa pet
+        await PetCollection.findByIdAndDelete(petId);
+        
+        res.redirect("/admin/users");
+    } catch (error) {
+        console.error("Error deleting pet:", error);
+        res.status(500).send("Error deleting pet");
+    }
+});
+
+// CÁC ROUTES USERS CŨ VẪN GIỮ NGUYÊN, chỉ sửa redirect về /admin/users
 app.post("/admin/users/add", async (req, res) => {
     if (req.session.role !== 'admin') {
         return res.redirect("/admin-secret");
@@ -1126,35 +1242,30 @@ app.post("/admin/users/add", async (req, res) => {
     try {
         const { username, password, email, phone, role } = req.body;
         
-        // Check if username already exists
         const existingUser = await UserCollection.findOne({ name: username });
         if (existingUser) {
-            // In a real app, you would handle this error better
             return res.status(400).send("Username already exists");
         }
         
-        // Validate role
         if (!['admin', 'vet', 'staff'].includes(role)) {
             return res.status(400).send("Invalid role");
         }
         
-        // Create user
         await UserCollection.create({
             name: username,
-            password, // In a production app, you should hash this password
+            password,
             email,
             phone,
             role
         });
         
-        res.redirect("/admin/users");
+        res.redirect("/admin/users"); // Giữ nguyên redirect
     } catch (error) {
         console.error("Error adding user:", error);
         res.status(500).send("Error adding user");
     }
 });
 
-// Update user
 app.post("/admin/users/update", async (req, res) => {
     if (req.session.role !== 'admin') {
         return res.redirect("/admin-secret");
@@ -1163,12 +1274,10 @@ app.post("/admin/users/update", async (req, res) => {
     try {
         const { userId, email, phone, newRole, resetPassword, newPassword } = req.body;
         
-        // Don't allow changing own role (to prevent admin from removing their own access)
         if (userId === req.session.userId && newRole !== 'admin') {
             return res.status(400).send("You cannot change your own role from admin");
         }
         
-        // Validate new role
         if (!['admin', 'vet', 'staff'].includes(newRole)) {
             return res.status(400).send("Invalid role");
         }
@@ -1179,21 +1288,19 @@ app.post("/admin/users/update", async (req, res) => {
             role: newRole
         };
         
-        // Update password if requested
         if (resetPassword === 'on' && newPassword) {
-            updateData.password = newPassword; // In a production app, you should hash this password
+            updateData.password = newPassword;
         }
         
         await UserCollection.findByIdAndUpdate(userId, updateData);
         
-        res.redirect("/admin/users");
+        res.redirect("/admin/users"); // Giữ nguyên redirect
     } catch (error) {
         console.error("Error updating user:", error);
         res.status(500).send("Error updating user");
     }
 });
 
-// Delete user
 app.post("/admin/users/delete", async (req, res) => {
     if (req.session.role !== 'admin') {
         return res.redirect("/admin-secret");
@@ -1202,14 +1309,13 @@ app.post("/admin/users/delete", async (req, res) => {
     try {
         const { userId } = req.body;
         
-        // Don't allow deleting own account
         if (userId === req.session.userId) {
             return res.status(400).send("You cannot delete your own account");
         }
         
         await UserCollection.findByIdAndDelete(userId);
         
-        res.redirect("/admin/users");
+        res.redirect("/admin/users"); // Giữ nguyên redirect
     } catch (error) {
         console.error("Error deleting user:", error);
         res.status(500).send("Error deleting user");
@@ -1460,35 +1566,158 @@ app.post("/admin/shop/update", async (req, res) => {
         res.redirect("/admin/shop?error=1");
     }
 });
+const SERVICE_PRICES = {
+    'khám sức khỏe': 200000,
+    'tắm': 100000,
+    'cắt tỉa lông': 150000,
+    'lưu trú': 300000
+};
 
-
-async function createDefaultShopInfo() {
+// Helper function để tính doanh thu
+async function calculateRevenue(startDate, endDate, status = ['confirmed', 'completed']) {
     try {
-        const shopExists = await ShopInformationCollection.findOne();
-        if (!shopExists) {
-            await ShopInformationCollection.create({
-                shopName: "Pet Care Center",
-                address: "123 Đường ABC, Quận XYZ, TP.HCM",
-                phone: "0982-495-562",
-                email: "phanquyenkols.booking@gmail.com",
-                description: "Chăm sóc tốt nhất cho người bạn thân yêu của bạn",
-                workingHours: {
-                    monday: { open: "08:00", close: "18:00" },
-                    tuesday: { open: "08:00", close: "18:00" },
-                    wednesday: { open: "08:00", close: "18:00" },
-                    thursday: { open: "08:00", close: "18:00" },
-                    friday: { open: "08:00", close: "18:00" },
-                    saturday: { open: "09:00", close: "17:00" },
-                    sunday: { open: "09:00", close: "17:00" }
-                },
-                services: ["Khám sức khỏe", "Tắm", "Cắt tỉa lông", "Lưu trú"]
-            });
-            console.log('Default shop information created');
-        }
+        const appointments = await AppointmentCollection.find({
+            status: { $in: status }, // Tính cả confirmed và completed
+            date: {
+                $gte: startDate,
+                $lte: endDate
+            }
+        });
+
+        let totalRevenue = 0;
+        const serviceStats = {};
+
+        appointments.forEach(appointment => {
+            const price = SERVICE_PRICES[appointment.service] || 0;
+            totalRevenue += price;
+
+            if (!serviceStats[appointment.service]) {
+                serviceStats[appointment.service] = {
+                    count: 0,
+                    revenue: 0
+                };
+            }
+            serviceStats[appointment.service].count++;
+            serviceStats[appointment.service].revenue += price;
+        });
+
+        return {
+            totalRevenue,
+            serviceStats,
+            totalAppointments: appointments.length
+        };
     } catch (error) {
-        console.error('Error creating shop info:', error);
+        console.error("Error calculating revenue:", error);
+        return { totalRevenue: 0, serviceStats: {}, totalAppointments: 0 };
     }
 }
+
+// Admin revenue page
+app.get("/admin/revenue", async (req, res) => {
+    if (req.session.role !== 'admin') {
+        return res.redirect("/admin-secret");
+    }
+    
+    try {
+        const now = new Date();
+        const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+        const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+        const startOfYear = new Date(now.getFullYear(), 0, 1);
+        const endOfYear = new Date(now.getFullYear(), 11, 31);
+
+        // Doanh thu tháng này
+        const monthlyRevenue = await calculateRevenue(startOfMonth, endOfMonth);
+        
+        // Doanh thu năm này
+        const yearlyRevenue = await calculateRevenue(startOfYear, endOfYear);
+
+        // Doanh thu 7 ngày qua
+        const last7Days = new Date();
+        last7Days.setDate(last7Days.getDate() - 7);
+        const weeklyRevenue = await calculateRevenue(last7Days, now);
+
+        // Doanh thu theo tháng trong năm
+        const monthlyData = [];
+        for (let month = 0; month < 12; month++) {
+            const monthStart = new Date(now.getFullYear(), month, 1);
+            const monthEnd = new Date(now.getFullYear(), month + 1, 0);
+            const revenue = await calculateRevenue(monthStart, monthEnd);
+            monthlyData.push({
+                month: month + 1,
+                revenue: revenue.totalRevenue,
+                appointments: revenue.totalAppointments
+            });
+        }
+
+        // Top dịch vụ theo doanh thu (tính từ đầu năm)
+        const allTimeRevenue = await calculateRevenue(new Date('2024-01-01'), now);
+
+        // Thống kê appointment theo status
+        const pendingCount = await AppointmentCollection.countDocuments({ status: 'pending' });
+        const confirmedCount = await AppointmentCollection.countDocuments({ status: 'confirmed' });
+        const completedCount = await AppointmentCollection.countDocuments({ status: 'completed' });
+
+        res.render("admin-revenue", {
+            monthlyRevenue,
+            yearlyRevenue,
+            weeklyRevenue,
+            monthlyData,
+            serviceStats: allTimeRevenue.serviceStats,
+            servicePrices: SERVICE_PRICES,
+            statusStats: {
+                pending: pendingCount,
+                confirmed: confirmedCount,
+                completed: completedCount
+            }
+        });
+    } catch (error) {
+        console.error("Error fetching revenue data:", error);
+        res.status(500).send("Error loading revenue data");
+    }
+});
+
+// API endpoint để lấy dữ liệu revenue cho chart
+app.get("/admin/revenue/api", async (req, res) => {
+    if (req.session.role !== 'admin') {
+        return res.status(403).json({ error: "Unauthorized" });
+    }
+    
+    try {
+        const { period, startDate, endDate } = req.query;
+        
+        let start, end;
+        const now = new Date();
+        
+        switch (period) {
+            case 'week':
+                start = new Date();
+                start.setDate(start.getDate() - 7);
+                end = now;
+                break;
+            case 'month':
+                start = new Date(now.getFullYear(), now.getMonth(), 1);
+                end = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+                break;
+            case 'year':
+                start = new Date(now.getFullYear(), 0, 1);
+                end = new Date(now.getFullYear(), 11, 31);
+                break;
+            case 'custom':
+                start = new Date(startDate);
+                end = new Date(endDate);
+                break;
+            default:
+                start = new Date(now.getFullYear(), now.getMonth(), 1);
+                end = now;
+        }
+
+        const revenueData = await calculateRevenue(start, end);
+        res.json(revenueData);
+    } catch (error) {
+        console.error("Error fetching revenue API data:", error);
+        res.status(500).json({ error: "Error fetching data" });
+    }
+});
 
 const port = 5000;
 app.listen(port, () => {

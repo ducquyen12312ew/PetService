@@ -1,0 +1,396 @@
+<!-- views/admin-revenue.ejs -->
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Thống kê doanh thu - Admin</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        body {
+            background-color: #ffffff;
+            color: #333;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        .admin-sidebar {
+            background-color: #343a40;
+            color: #fff;
+            min-height: 100vh;
+            padding-top: 15px;
+        }
+        .admin-sidebar .nav-link {
+            color: rgba(255, 255, 255, 0.75);
+            padding: 10px 20px;
+            border-radius: 0;
+            margin-bottom: 5px;
+        }
+        .admin-sidebar .nav-link:hover, .admin-sidebar .nav-link.active {
+            color: #fff;
+            background-color: rgba(255, 255, 255, 0.1);
+        }
+        .admin-sidebar .nav-link i {
+            margin-right: 10px;
+            width: 20px;
+            text-align: center;
+        }
+        .content-wrapper {
+            padding: 20px;
+        }
+        .revenue-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-radius: 15px;
+            padding: 25px;
+            margin-bottom: 20px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        }
+        .revenue-card.monthly {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+        }
+        .revenue-card.weekly {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+        }
+        .revenue-card.yearly {
+            background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
+        }
+        .revenue-value {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 5px;
+        }
+        .revenue-label {
+            font-size: 1rem;
+            opacity: 0.9;
+        }
+        .revenue-icon {
+            font-size: 3rem;
+            opacity: 0.3;
+            position: absolute;
+            right: 20px;
+            top: 20px;
+        }
+        .chart-card {
+            background-color: white;
+            border-radius: 15px;
+            padding: 25px;
+            margin-bottom: 20px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
+        }
+        .service-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px;
+            margin-bottom: 10px;
+            background-color: #f8f9fa;
+            border-radius: 10px;
+            border-left: 4px solid #f7c800;
+        }
+        .service-name {
+            font-weight: 600;
+        }
+        .service-stats {
+            text-align: right;
+        }
+        .service-revenue {
+            font-weight: 700;
+            color: #28a745;
+            font-size: 1.1rem;
+        }
+        .service-count {
+            font-size: 0.9rem;
+            color: #666;
+        }
+        .filter-section {
+            background-color: white;
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
+        }
+    </style>
+</head>
+<body>
+
+<div class="container-fluid">
+    <div class="row">
+        <!-- Sidebar -->
+        <div class="col-md-3 col-lg-2 d-md-block admin-sidebar collapse">
+            <div class="text-center mb-4 pt-3">
+                <i class="fas fa-user-shield fa-3x mb-2"></i>
+                <h5><%= user.name %></h5>
+                <small>Administrator</small>
+            </div>
+            <hr>
+            <ul class="nav flex-column">
+                <li class="nav-item">
+                    <a class="nav-link" href="/admin/dashboard">
+                        <i class="fas fa-tachometer-alt"></i> Dashboard
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="/admin/users">
+                        <i class="fas fa-users"></i>  Quản lý tài khoản & thú cưng
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="/admin/appointments">
+                        <i class="fas fa-calendar-check"></i> Lịch hẹn
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="/admin/shop">
+                        <i class="fas fa-store"></i> Thông tin shop
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link active" href="/admin/revenue">
+                        <i class="fas fa-chart-line"></i> Thống kê doanh thu
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="/logout">
+                        <i class="fas fa-sign-out-alt"></i> Đăng xuất
+                    </a>
+                </li>
+            </ul>
+        </div>
+
+        <!-- Main Content -->
+        <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4 content-wrapper">
+            <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+                <h1 class="h2">Thống kê doanh thu</h1>
+                <div class="btn-toolbar mb-2 mb-md-0">
+                    <div class="btn-group me-2">
+                        <button type="button" class="btn btn-sm btn-outline-secondary" id="exportBtn">
+                            <i class="fas fa-download me-1"></i> Xuất báo cáo
+                        </button>
+                        <button type="button" class="btn btn-sm btn-outline-secondary" id="printBtn">
+                            <i class="fas fa-print me-1"></i> In
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Filter Section -->
+            <div class="filter-section">
+                <div class="row">
+                    <div class="col-md-3">
+                        <label class="form-label">Thời gian</label>
+                        <select class="form-select" id="periodFilter">
+                            <option value="week">7 ngày qua</option>
+                            <option value="month" selected>Tháng này</option>
+                            <option value="year">Năm này</option>
+                            <option value="custom">Tùy chỉnh</option>
+                        </select>
+                    </div>
+                    <div class="col-md-3" id="customDateRange" style="display: none;">
+                        <label class="form-label">Từ ngày</label>
+                        <input type="date" class="form-control" id="startDate">
+                    </div>
+                    <div class="col-md-3" id="customDateRange2" style="display: none;">
+                        <label class="form-label">Đến ngày</label>
+                        <input type="date" class="form-control" id="endDate">
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label">&nbsp;</label>
+                        <button type="button" class="btn btn-primary w-100" id="applyFilter">
+                            <i class="fas fa-search me-1"></i> Áp dụng
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Revenue Summary Cards -->
+            <div class="row mb-4">
+                <div class="col-md-4">
+                    <div class="revenue-card weekly position-relative">
+                        <i class="fas fa-calendar-week revenue-icon"></i>
+                        <div class="revenue-value"><%= (weeklyRevenue.totalRevenue).toLocaleString('vi-VN') %>đ</div>
+                        <div class="revenue-label">Doanh thu 7 ngày</div>
+                        <small><%= weeklyRevenue.totalAppointments %> lượt dịch vụ</small>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="revenue-card monthly position-relative">
+                        <i class="fas fa-calendar-alt revenue-icon"></i>
+                        <div class="revenue-value"><%= (monthlyRevenue.totalRevenue).toLocaleString('vi-VN') %>đ</div>
+                        <div class="revenue-label">Doanh thu tháng này</div>
+                        <small><%= monthlyRevenue.totalAppointments %> lượt dịch vụ</small>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="revenue-card yearly position-relative">
+                        <i class="fas fa-chart-line revenue-icon"></i>
+                        <div class="revenue-value"><%= (yearlyRevenue.totalRevenue).toLocaleString('vi-VN') %>đ</div>
+                        <div class="revenue-label">Doanh thu năm nay</div>
+                        <small><%= yearlyRevenue.totalAppointments %> lượt dịch vụ</small>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row">
+                <!-- Revenue Chart -->
+                <div class="col-md-8">
+                    <div class="chart-card">
+                        <h5 class="mb-4">Biểu đồ doanh thu theo tháng</h5>
+                        <canvas id="revenueChart" width="400" height="200"></canvas>
+                    </div>
+                </div>
+
+                <!-- Service Statistics -->
+                <div class="col-md-4">
+                    <div class="chart-card">
+                        <h5 class="mb-4">Thống kê theo dịch vụ</h5>
+                        <% Object.keys(serviceStats).forEach(service => { %>
+                            <div class="service-item">
+                                <div>
+                                    <div class="service-name"><%= service %></div>
+                                    <div class="service-count"><%= serviceStats[service].count %> lượt</div>
+                                </div>
+                                <div class="service-stats">
+                                    <div class="service-revenue"><%= serviceStats[service].revenue.toLocaleString('vi-VN') %>đ</div>
+                                </div>
+                            </div>
+                        <% }); %>
+                    </div>
+                </div>
+            </div>
+
+  
+        </main>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+    // Chart data from server
+    const monthlyData = <%- JSON.stringify(monthlyData) %>;
+    const serviceStats = <%- JSON.stringify(serviceStats) %>;
+
+    // Revenue Chart
+    const revenueCtx = document.getElementById('revenueChart').getContext('2d');
+    const revenueChart = new Chart(revenueCtx, {
+        type: 'line',
+        data: {
+            labels: monthlyData.map(m => `Tháng ${m.month}`),
+            datasets: [{
+                label: 'Doanh thu (VNĐ)',
+                data: monthlyData.map(m => m.revenue),
+                borderColor: '#f7c800',
+                backgroundColor: 'rgba(247, 200, 0, 0.1)',
+                borderWidth: 3,
+                fill: true,
+                tension: 0.4
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: {
+                    display: false
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    ticks: {
+                        callback: function(value) {
+                            return value.toLocaleString('vi-VN') + 'đ';
+                        }
+                    }
+                }
+            }
+        }
+    });
+
+    // Service Chart
+    const serviceCtx = document.getElementById('serviceChart').getContext('2d');
+    const serviceChart = new Chart(serviceCtx, {
+        type: 'doughnut',
+        data: {
+            labels: Object.keys(serviceStats),
+            datasets: [{
+                data: Object.values(serviceStats).map(s => s.revenue),
+                backgroundColor: [
+                    '#4e73df',
+                    '#36b9cc',
+                    '#1cc88a',
+                    '#f6c23e'
+                ]
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: {
+                    position: 'bottom'
+                }
+            }
+        }
+    });
+
+    // Period filter
+    document.getElementById('periodFilter').addEventListener('change', function() {
+        if (this.value === 'custom') {
+            document.getElementById('customDateRange').style.display = 'block';
+            document.getElementById('customDateRange2').style.display = 'block';
+        } else {
+            document.getElementById('customDateRange').style.display = 'none';
+            document.getElementById('customDateRange2').style.display = 'none';
+        }
+    });
+
+    // Apply filter
+    document.getElementById('applyFilter').addEventListener('click', function() {
+        const period = document.getElementById('periodFilter').value;
+        const startDate = document.getElementById('startDate').value;
+        const endDate = document.getElementById('endDate').value;
+        
+        let url = `/admin/revenue/api?period=${period}`;
+        if (period === 'custom' && startDate && endDate) {
+            url += `&startDate=${startDate}&endDate=${endDate}`;
+        }
+        
+        fetch(url)
+            .then(response => response.json())
+            .then(data => {
+                // Update page with new data
+                window.location.reload(); // Simple refresh for now
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Có lỗi xảy ra khi tải dữ liệu');
+            });
+    });
+
+    // Export functionality
+    document.getElementById('exportBtn').addEventListener('click', function() {
+        // Create CSV data
+        let csvContent = "data:text/csv;charset=utf-8,";
+        csvContent += "Dịch vụ,Số lượt,Doanh thu\n";
+        
+        Object.keys(serviceStats).forEach(service => {
+            const stats = serviceStats[service];
+            csvContent += `${service},${stats.count},${stats.revenue}\n`;
+        });
+        
+        // Download CSV
+        const encodedUri = encodeURI(csvContent);
+        const link = document.createElement("a");
+        link.setAttribute("href", encodedUri);
+        link.setAttribute("download", `revenue_report_${new Date().toISOString().split('T')[0]}.csv`);
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    });
+
+    // Print functionality
+    document.getElementById('printBtn').addEventListener('click', function() {
+        window.print();
+    });
+</script>
+</body>
+</html>

@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Quản lý tài khoản - Admin</title>
+    <title>Quản lý tài khoản và thú cưng - Admin</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
@@ -37,30 +37,6 @@
         .content-wrapper {
             padding: 20px;
         }
-        .user-card {
-            background-color: white;
-            border-radius: 8px;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-            margin-bottom: 20px;
-            transition: transform 0.3s, box-shadow 0.3s;
-        }
-        .user-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
-        }
-        .user-header {
-            padding: 15px;
-            border-bottom: 1px solid #eee;
-            position: relative;
-        }
-        .user-body {
-            padding: 15px;
-        }
-        .user-role {
-            position: absolute;
-            right: 15px;
-            top: 15px;
-        }
         .filter-card {
             background-color: white;
             border-radius: 8px;
@@ -92,6 +68,72 @@
         .table-hover tbody tr:hover {
             background-color: rgba(247, 200, 0, 0.1);
         }
+        
+        /* CSS cho tabs */
+        .nav-tabs .nav-link {
+            color: #555;
+            font-weight: 500;
+            border: none;
+            border-bottom: 2px solid transparent;
+            background: none;
+        }
+        .nav-tabs .nav-link.active {
+            color: #f7c800;
+            font-weight: 600;
+            border-bottom: 2px solid #f7c800;
+            background: none;
+        }
+        .nav-tabs .nav-link:hover {
+            color: #f7c800;
+            border-bottom: 2px solid rgba(247, 200, 0, 0.3);
+        }
+        
+        /* CSS đặc biệt cho pets table */
+        .pets-table .pet-name {
+            font-weight: 600;
+            color: #333;
+        }
+        .pets-table .pet-icon {
+            font-size: 1.2rem;
+            margin-right: 8px;
+        }
+        .pets-table .pet-type {
+            color: #666;
+            font-size: 0.9rem;
+        }
+        .pets-table .owner-info {
+            line-height: 1.3;
+        }
+        .pets-table .owner-name {
+            font-weight: 500;
+            color: #333;
+        }
+        .pets-table .owner-contact {
+            color: #666;
+            font-size: 0.85rem;
+        }
+        .appointment-status {
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            font-weight: 500;
+        }
+        .status-completed {
+            background-color: #d4edda;
+            color: #155724;
+        }
+        .status-confirmed {
+            background-color: #cce5f0;
+            color: #004085;
+        }
+        .status-pending {
+            background-color: #fff3cd;
+            color: #856404;
+        }
+        .status-none {
+            background-color: #f8f9fa;
+            color: #6c757d;
+        }
     </style>
 </head>
 <body>
@@ -113,8 +155,8 @@
                     </a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link  active" href="/admin/users">
-                        <i class="fas fa-users"></i> Quản lý tài khoản
+                    <a class="nav-link active" href="/admin/users">
+                        <i class="fas fa-users"></i> Quản lý tài khoản & thú cưng
                     </a>
                 </li>
                 <li class="nav-item">
@@ -128,6 +170,11 @@
                     </a>
                 </li>
                 <li class="nav-item">
+                    <a class="nav-link" href="/admin/revenue">
+                        <i class="fas fa-chart-line"></i> Thống kê doanh thu
+                    </a>
+                </li>
+                <li class="nav-item">
                     <a class="nav-link" href="/logout">
                         <i class="fas fa-sign-out-alt"></i> Đăng xuất
                     </a>
@@ -138,101 +185,271 @@
         <!-- Main Content -->
         <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4 content-wrapper">
             <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
-                <h1 class="h2">Quản lý tài khoản</h1>
+                <h1 class="h2">Quản lý tài khoản và thú cưng</h1>
                 <div class="btn-toolbar mb-2 mb-md-0">
-                    <button type="button" class="btn btn-yellow" data-bs-toggle="modal" data-bs-target="#addUserModal">
-                        <i class="fas fa-user-plus me-1"></i> Thêm tài khoản mới
+                    <button type="button" class="btn btn-yellow me-2" data-bs-toggle="modal" data-bs-target="#addUserModal">
+                        <i class="fas fa-user-plus me-1"></i> Thêm tài khoản
+                    </button>
+                    <button type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#addPetModal">
+                        <i class="fas fa-paw me-1"></i> Thêm thú cưng
                     </button>
                 </div>
             </div>
 
-            <!-- Filter Options -->
-            <div class="filter-card">
-                <div class="row">
-                    <div class="col-md-4 mb-2">
-                        <input type="text" class="form-control" id="searchInput" placeholder="Tìm kiếm theo tên, email...">
+            <!-- Tabs Navigation -->
+            <ul class="nav nav-tabs mb-4" id="managementTabs" role="tablist">
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link active" id="users-tab" data-bs-toggle="tab" data-bs-target="#users" type="button" role="tab">
+                        <i class="fas fa-users me-2"></i>Tài khoản (<%= users.length %>)
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="pets-tab" data-bs-toggle="tab" data-bs-target="#pets" type="button" role="tab">
+                        <i class="fas fa-paw me-2"></i>Thú cưng (<%= typeof pets !== 'undefined' && pets ? pets.length : 0 %>)
+                    </button>
+                </li>
+            </ul>
+
+            <!-- Tab Content -->
+            <div class="tab-content" id="managementTabsContent">
+                <!-- Tab Tài khoản -->
+                <div class="tab-pane fade show active" id="users" role="tabpanel">
+                    <!-- Filter Options -->
+                    <div class="filter-card">
+                        <div class="row">
+                            <div class="col-md-4 mb-2">
+                                <input type="text" class="form-control" id="searchInput" placeholder="Tìm kiếm theo tên, email...">
+                            </div>
+                            <div class="col-md-3 mb-2">
+                                <select class="form-select" id="roleFilter">
+                                    <option value="">Tất cả vai trò</option>
+                                    <option value="admin">Admin</option>
+                                    <option value="vet">Bác sĩ thú y</option>
+                                    <option value="staff">Người dùng</option>
+                                </select>
+                            </div>
+                            <div class="col-md-3 mb-2">
+                                <select class="form-select" id="sortOrder">
+                                    <option value="newest">Mới nhất</option>
+                                    <option value="oldest">Cũ nhất</option>
+                                    <option value="name">Theo tên</option>
+                                </select>
+                            </div>
+                            <div class="col-md-2 mb-2">
+                                <button type="button" class="btn btn-primary w-100" id="filterBtn">
+                                    <i class="fas fa-filter me-1"></i> Lọc
+                                </button>
+                            </div>
+                        </div>
                     </div>
-                    <div class="col-md-3 mb-2">
-                        <select class="form-select" id="roleFilter">
-                            <option value="">Tất cả vai trò</option>
-                            <option value="admin">Admin</option>
-                            <option value="vet">Bác sĩ thú y</option>
-                            <option value="staff">Người dùng</option>
-                        </select>
-                    </div>
-                    <div class="col-md-3 mb-2">
-                        <select class="form-select" id="sortOrder">
-                            <option value="newest">Mới nhất</option>
-                            <option value="oldest">Cũ nhất</option>
-                            <option value="name">Theo tên</option>
-                        </select>
-                    </div>
-                    <div class="col-md-2 mb-2">
-                        <button type="button" class="btn btn-primary w-100" id="filterBtn">
-                            <i class="fas fa-filter me-1"></i> Lọc
-                        </button>
+
+                    <!-- Users Table -->
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Tên đăng nhập</th>
+                                    <th>Email</th>
+                                    <th>Điện thoại</th>
+                                    <th>Vai trò</th>
+                                    <th>Ngày tạo</th>
+                                    <th>Thao tác</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <% if (users && users.length > 0) { %>
+                                    <% users.forEach((user, index) => { %>
+                                        <tr>
+                                            <td><%= index + 1 %></td>
+                                            <td><%= user.name %></td>
+                                            <td><%= user.email || 'Chưa cập nhật' %></td>
+                                            <td><%= user.phone || 'Chưa cập nhật' %></td>
+                                            <td>
+                                                <% if (user.role === 'admin') { %>
+                                                    <span class="badge role-admin">Admin</span>
+                                                <% } else if (user.role === 'vet') { %>
+                                                    <span class="badge role-vet">Bác sĩ thú y</span>
+                                                <% } else { %>
+                                                    <span class="badge role-staff">Người dùng</span>
+                                                <% } %>
+                                            </td>
+                                            <td><%= new Date(user.createdAt).toLocaleDateString('vi-VN') %></td>
+                                            <td>
+                                                <button class="btn btn-sm btn-outline-primary edit-user-btn" 
+                                                        data-id="<%= user._id %>"
+                                                        data-name="<%= user.name %>"
+                                                        data-email="<%= user.email || '' %>"
+                                                        data-phone="<%= user.phone || '' %>"
+                                                        data-role="<%= user.role %>">
+                                                    <i class="fas fa-edit"></i>
+                                                </button>
+                                                <% if (user._id.toString() !== locals.user.id) { %>
+                                                    <button class="btn btn-sm btn-outline-danger delete-user-btn" 
+                                                            data-id="<%= user._id %>"
+                                                            data-name="<%= user.name %>">
+                                                        <i class="fas fa-trash"></i>
+                                                    </button>
+                                                <% } %>
+                                            </td>
+                                        </tr>
+                                    <% }); %>
+                                <% } else { %>
+                                    <tr>
+                                        <td colspan="7" class="text-center">Không tìm thấy tài khoản nào</td>
+                                    </tr>
+                                <% } %>
+                            </tbody>
+                        </table>
                     </div>
                 </div>
-            </div>
 
-            <!-- Users Table -->
-            <div class="table-responsive">
-                <table class="table table-hover">
-                    <thead>
-                        <tr>
-                            <th>ID</th>
-                            <th>Tên đăng nhập</th>
-                            <th>Email</th>
-                            <th>Điện thoại</th>
-                            <th>Vai trò</th>
-                            <th>Ngày tạo</th>
-                            <th>Thao tác</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <% if (users && users.length > 0) { %>
-                            <% users.forEach((user, index) => { %>
+                <!-- Tab Thú cưng -->
+                <div class="tab-pane fade" id="pets" role="tabpanel">
+                    <!-- Filter cho Pets -->
+                    <div class="filter-card">
+                        <div class="row">
+                            <div class="col-md-4 mb-2">
+                                <input type="text" class="form-control" id="searchPets" placeholder="Tìm kiếm thú cưng hoặc chủ nhân...">
+                            </div>
+                            <div class="col-md-3 mb-2">
+                                <select class="form-select" id="typeFilter">
+                                    <option value="">Tất cả loại</option>
+                                    <option value="dog">Chó</option>
+                                    <option value="cat">Mèo</option>
+                                    <option value="bird">Chim</option>
+                                    <option value="rabbit">Thỏ</option>
+                                    <option value="other">Khác</option>
+                                </select>
+                            </div>
+                            <div class="col-md-3 mb-2">
+                                <select class="form-select" id="sortPets">
+                                    <option value="newest">Mới nhất</option>
+                                    <option value="oldest">Cũ nhất</option>
+                                    <option value="name">Theo tên</option>
+                                </select>
+                            </div>
+                            <div class="col-md-2 mb-2">
+                                <button type="button" class="btn btn-primary w-100" id="filterPetsBtn">
+                                    <i class="fas fa-filter me-1"></i> Lọc
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Pets Table -->
+                    <div class="table-responsive">
+                        <table class="table table-hover pets-table">
+                            <thead>
                                 <tr>
-                                    <td><%= index + 1 %></td>
-                                    <td><%= user.name %></td>
-                                    <td><%= user.email || 'Chưa cập nhật' %></td>
-                                    <td><%= user.phone || 'Chưa cập nhật' %></td>
-                                    <td>
-                                        <% if (user.role === 'admin') { %>
-                                            <span class="badge role-admin">Admin</span>
-                                        <% } else if (user.role === 'vet') { %>
-                                            <span class="badge role-vet">Bác sĩ thú y</span>
-                                        <% } else { %>
-                                            <span class="badge role-staff">Người dùng</span>
-                                        <% } %>
-                                    </td>
-                                    <td><%= new Date(user.createdAt).toLocaleDateString('vi-VN') %></td>
-                                    <td>
-                                        <button class="btn btn-sm btn-outline-primary edit-user-btn" 
-                                                data-id="<%= user._id %>"
-                                                data-name="<%= user.name %>"
-                                                data-email="<%= user.email || '' %>"
-                                                data-phone="<%= user.phone || '' %>"
-                                                data-role="<%= user.role %>">
-                                            <i class="fas fa-edit"></i>
-                                        </button>
-                                        <% if (user._id.toString() !== locals.user.id) { %>
-                                            <button class="btn btn-sm btn-outline-danger delete-user-btn" 
-                                                    data-id="<%= user._id %>"
-                                                    data-name="<%= user.name %>">
-                                                <i class="fas fa-trash"></i>
-                                            </button>
-                                        <% } %>
-                                    </td>
+                                    <th>ID</th>
+                                    <th>Thú cưng</th>
+                                    <th>Chủ nhân</th>
+                                    <th>Thông tin</th>
+                                    <th>Trạng thái</th>
+                                    <th>Ngày đăng ký</th>
+                                    <th>Thao tác</th>
                                 </tr>
-                            <% }); %>
-                        <% } else { %>
-                            <tr>
-                                <td colspan="7" class="text-center">Không tìm thấy tài khoản nào</td>
-                            </tr>
-                        <% } %>
-                    </tbody>
-                </table>
+                            </thead>
+                            <tbody>
+                                <% if (typeof pets !== 'undefined' && pets && pets.length > 0) { %>
+                                    <% pets.forEach((pet, index) => { %>
+                                        <tr class="pet-row" 
+                                            data-name="<%= pet.name.toLowerCase() %>" 
+                                            data-type="<%= pet.type %>" 
+                                            data-owner="<%= pet.ownerName.toLowerCase() %>">
+                                            <td><%= index + 1 %></td>
+                                            <td>
+                                                <div class="d-flex align-items-center">
+                                                    <% if (pet.type.toLowerCase() === 'dog') { %>
+                                                        <i class="fas fa-dog pet-icon text-warning"></i>
+                                                    <% } else if (pet.type.toLowerCase() === 'cat') { %>
+                                                        <i class="fas fa-cat pet-icon text-warning"></i>
+                                                    <% } else { %>
+                                                        <i class="fas fa-paw pet-icon text-warning"></i>
+                                                    <% } %>
+                                                    <div>
+                                                        <div class="pet-name"><%= pet.name %></div>
+                                                        <div class="pet-type"><%= pet.type %> <% if (pet.breed) { %>- <%= pet.breed %><% } %></div>
+                                                    </div>
+                                                </div>
+                                            </td>
+                                            <td>
+                                                <div class="owner-info">
+                                                    <div class="owner-name"><%= pet.ownerName %></div>
+                                                    <div class="owner-contact"><%= pet.ownerPhone %></div>
+                                                    <% if (pet.ownerEmail) { %>
+                                                        <div class="owner-contact"><%= pet.ownerEmail %></div>
+                                                    <% } %>
+                                                </div>
+                                            </td>
+                                            <td>
+                                                <% if (pet.age || pet.weight) { %>
+                                                    <small class="text-muted">
+                                                        <% if (pet.age) { %>Tuổi: <%= pet.age %><% } %>
+                                                        <% if (pet.age && pet.weight) { %> | <% } %>
+                                                        <% if (pet.weight) { %><%= pet.weight %>kg<% } %>
+                                                    </small>
+                                                <% } else { %>
+                                                    <small class="text-muted">Chưa cập nhật</small>
+                                                <% } %>
+                                            </td>
+                                            <td>
+                                                <% if (pet.latestAppointment) { %>
+                                                    <% let statusClass = 'status-none'; %>
+                                                    <% let statusText = 'Chưa có'; %>
+                                                    <% if (pet.latestAppointment.status === 'completed') { %>
+                                                        <% statusClass = 'status-completed'; statusText = 'Hoàn thành'; %>
+                                                    <% } else if (pet.latestAppointment.status === 'confirmed') { %>
+                                                        <% statusClass = 'status-confirmed'; statusText = 'Đã xác nhận'; %>
+                                                    <% } else if (pet.latestAppointment.status === 'pending') { %>
+                                                        <% statusClass = 'status-pending'; statusText = 'Chờ xác nhận'; %>
+                                                    <% } %>
+                                                    <div class="appointment-status <%= statusClass %>">
+                                                        <%= statusText %>
+                                                    </div>
+                                                    <small class="text-muted d-block mt-1">
+                                                        <%= pet.latestAppointment.service %>
+                                                    </small>
+                                                <% } else { %>
+                                                    <div class="appointment-status status-none">Chưa có lịch hẹn</div>
+                                                <% } %>
+                                            </td>
+                                            <td><%= new Date(pet.registeredAt).toLocaleDateString('vi-VN') %></td>
+                                            <td>
+                                                <button class="btn btn-sm btn-outline-primary edit-pet-btn"
+                                                        data-id="<%= pet._id %>"
+                                                        data-name="<%= pet.name %>"
+                                                        data-type="<%= pet.type %>"
+                                                        data-breed="<%= pet.breed || '' %>"
+                                                        data-age="<%= pet.age || '' %>"
+                                                        data-weight="<%= pet.weight || '' %>"
+                                                        data-gender="<%= pet.gender || '' %>"
+                                                        data-owner-name="<%= pet.ownerName %>"
+                                                        data-owner-phone="<%= pet.ownerPhone %>"
+                                                        data-owner-email="<%= pet.ownerEmail || '' %>">
+                                                    <i class="fas fa-edit"></i>
+                                                </button>
+                                                <button class="btn btn-sm btn-outline-danger delete-pet-btn"
+                                                        data-id="<%= pet._id %>"
+                                                        data-name="<%= pet.name %>">
+                                                    <i class="fas fa-trash"></i>
+                                                </button>
+                                            </td>
+                                        </tr>
+                                    <% }); %>
+                                <% } else { %>
+                                    <tr>
+                                        <td colspan="7" class="text-center py-4">
+                                            <i class="fas fa-paw fa-3x text-muted mb-3"></i>
+                                            <div>Chưa có thú cưng nào được đăng ký</div>
+                                        </td>
+                                    </tr>
+                                <% } %>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
             </div>
         </main>
     </div>
@@ -276,6 +493,87 @@
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
                     <button type="submit" class="btn btn-primary">Thêm tài khoản</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Add Pet Modal -->
+<div class="modal fade" id="addPetModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header bg-success text-white">
+                <h5 class="modal-title">Thêm thú cưng mới</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form id="addPetForm">
+                <div class="modal-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h6 class="mb-3">Thông tin thú cưng</h6>
+                            <div class="mb-3">
+                                <label for="petName" class="form-label">Tên thú cưng</label>
+                                <input type="text" class="form-control" id="petName" name="name" required>
+                            </div>
+                            <div class="mb-3">
+                                <label for="petType" class="form-label">Loại thú cưng</label>
+                                <select class="form-select" id="petType" name="type" required>
+                                    <option value="">Chọn loại</option>
+                                    <option value="dog">Chó</option>
+                                    <option value="cat">Mèo</option>
+                                    <option value="bird">Chim</option>
+                                    <option value="rabbit">Thỏ</option>
+                                    <option value="other">Khác</option>
+                                </select>
+                            </div>
+                            <div class="mb-3">
+                                <label for="petBreed" class="form-label">Giống</label>
+                                <input type="text" class="form-control" id="petBreed" name="breed">
+                            </div>
+                            <div class="row">
+                                <div class="col-6">
+                                    <div class="mb-3">
+                                        <label for="petAge" class="form-label">Tuổi</label>
+                                        <input type="number" class="form-control" id="petAge" name="age">
+                                    </div>
+                                </div>
+                                <div class="col-6">
+                                    <div class="mb-3">
+                                        <label for="petWeight" class="form-label">Cân nặng (kg)</label>
+                                        <input type="number" step="0.1" class="form-control" id="petWeight" name="weight">
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="mb-3">
+                                <label for="petGender" class="form-label">Giới tính</label>
+                                <select class="form-select" id="petGender" name="gender">
+                                    <option value="unknown">Không xác định</option>
+                                    <option value="male">Đực</option>
+                                    <option value="female">Cái</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <h6 class="mb-3">Thông tin chủ nhân</h6>
+                            <div class="mb-3">
+                                <label for="ownerName" class="form-label">Tên chủ nhân</label>
+                                <input type="text" class="form-control" id="ownerName" name="ownerName" required>
+                            </div>
+                            <div class="mb-3">
+                                <label for="ownerPhone" class="form-label">Số điện thoại</label>
+                                <input type="tel" class="form-control" id="ownerPhone" name="ownerPhone" required>
+                            </div>
+                            <div class="mb-3">
+                                <label for="ownerEmail" class="form-label">Email</label>
+                                <input type="email" class="form-control" id="ownerEmail" name="ownerEmail">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                    <button type="submit" class="btn btn-success">Thêm thú cưng</button>
                 </div>
             </form>
         </div>
@@ -335,6 +633,87 @@
     </div>
 </div>
 
+<!-- Edit Pet Modal -->
+<div class="modal fade" id="editPetModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header bg-warning text-dark">
+                <h5 class="modal-title">Chỉnh sửa thú cưng</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form action="/admin/users/pets/update" method="POST">
+                <input type="hidden" id="editPetId" name="petId">
+                <div class="modal-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h6 class="mb-3">Thông tin thú cưng</h6>
+                            <div class="mb-3">
+                                <label for="editPetName" class="form-label">Tên thú cưng</label>
+                                <input type="text" class="form-control" id="editPetName" name="name" required>
+                            </div>
+                            <div class="mb-3">
+                                <label for="editPetType" class="form-label">Loại thú cưng</label>
+                                <select class="form-select" id="editPetType" name="type" required>
+                                    <option value="dog">Chó</option>
+                                    <option value="cat">Mèo</option>
+                                    <option value="bird">Chim</option>
+                                    <option value="rabbit">Thỏ</option>
+                                    <option value="other">Khác</option>
+                                </select>
+                            </div>
+                            <div class="mb-3">
+                                <label for="editPetBreed" class="form-label">Giống</label>
+                                <input type="text" class="form-control" id="editPetBreed" name="breed">
+                            </div>
+                            <div class="row">
+                                <div class="col-6">
+                                    <div class="mb-3">
+                                        <label for="editPetAge" class="form-label">Tuổi</label>
+                                        <input type="number" class="form-control" id="editPetAge" name="age">
+                                    </div>
+                                </div>
+                                <div class="col-6">
+                                    <div class="mb-3">
+                                        <label for="editPetWeight" class="form-label">Cân nặng (kg)</label>
+                                        <input type="number" step="0.1" class="form-control" id="editPetWeight" name="weight">
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="mb-3">
+                                <label for="editPetGender" class="form-label">Giới tính</label>
+                                <select class="form-select" id="editPetGender" name="gender">
+                                    <option value="unknown">Không xác định</option>
+                                    <option value="male">Đực</option>
+                                    <option value="female">Cái</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <h6 class="mb-3">Thông tin chủ nhân</h6>
+                            <div class="mb-3">
+                                <label for="editOwnerName" class="form-label">Tên chủ nhân</label>
+                                <input type="text" class="form-control" id="editOwnerName" name="ownerName" required>
+                            </div>
+                            <div class="mb-3">
+                                <label for="editOwnerPhone" class="form-label">Số điện thoại</label>
+                                <input type="tel" class="form-control" id="editOwnerPhone" name="ownerPhone" required>
+                            </div>
+                            <div class="mb-3">
+                                <label for="editOwnerEmail" class="form-label">Email</label>
+                                <input type="email" class="form-control" id="editOwnerEmail" name="ownerEmail">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                    <button type="submit" class="btn btn-warning">Lưu thay đổi</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
 <!-- Delete User Modal -->
 <div class="modal fade" id="deleteUserModal" tabindex="-1" aria-labelledby="deleteUserModalLabel" aria-hidden="true">
     <div class="modal-dialog">
@@ -358,8 +737,32 @@
     </div>
 </div>
 
+<!-- Delete Pet Modal -->
+<div class="modal fade" id="deletePetModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-danger text-white">
+                <h5 class="modal-title">Xác nhận xóa thú cưng</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p>Bạn có chắc chắn muốn xóa thú cưng <strong id="deletePetName"></strong>?</p>
+                <p class="text-danger">Lưu ý: Hành động này sẽ xóa toàn bộ thông tin y tế và lịch sử của thú cưng!</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                <form id="deletePetForm" action="/admin/users/pets/delete" method="POST">
+                    <input type="hidden" id="deletePetId" name="petId">
+                    <button type="submit" class="btn btn-danger">Xóa thú cưng</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 <script>
+    // JavaScript cho User Management
     // Show edit user modal
     document.querySelectorAll('.edit-user-btn').forEach(btn => {
         btn.addEventListener('click', function() {
@@ -404,62 +807,119 @@
         }
     });
     
-// Filter functionality
-document.getElementById('filterBtn').addEventListener('click', function() {
-    const searchTerm = document.getElementById('searchInput').value.toLowerCase();
-    const roleFilter = document.getElementById('roleFilter').value;
-    const rows = document.querySelectorAll('tbody tr');
-    
-    rows.forEach(row => {
-        const name = row.cells[1].textContent.toLowerCase();
-        const email = row.cells[2].textContent.toLowerCase();
-        const phone = row.cells[3].textContent.toLowerCase();
+    // Filter users functionality
+    document.getElementById('filterBtn').addEventListener('click', function() {
+        const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+        const roleFilter = document.getElementById('roleFilter').value;
+        const rows = document.querySelectorAll('tbody tr');
         
-        // Xác định role thực tế dựa vào class của badge
-        let roleValue = '';
-        const badge = row.querySelector('.badge');
-        if (badge.classList.contains('role-admin')) roleValue = 'admin';
-        else if (badge.classList.contains('role-vet')) roleValue = 'vet';
-        else if (badge.classList.contains('role-staff')) roleValue = 'staff';
-        
-        const matchesSearch = name.includes(searchTerm) || email.includes(searchTerm) || phone.includes(searchTerm);
-        const matchesRole = roleFilter === '' || roleValue === roleFilter;
-        
-        if (matchesSearch && matchesRole) {
-            row.style.display = '';
-        } else {
-            row.style.display = 'none';
-        }
-    });
-});
-    
-    // Sort functionality
-    document.getElementById('sortOrder').addEventListener('change', function() {
-        const sortOption = this.value;
-        const tbody = document.querySelector('tbody');
-        const rows = Array.from(tbody.querySelectorAll('tr'));
-        
-        rows.sort((a, b) => {
-            if (sortOption === 'newest') {
-                const dateA = new Date(a.cells[5].textContent.split('/').reverse().join('-'));
-                const dateB = new Date(b.cells[5].textContent.split('/').reverse().join('-'));
-                return dateB - dateA;
-            } else if (sortOption === 'oldest') {
-                const dateA = new Date(a.cells[5].textContent.split('/').reverse().join('-'));
-                const dateB = new Date(b.cells[5].textContent.split('/').reverse().join('-'));
-                return dateA - dateB;
-            } else if (sortOption === 'name') {
-                const nameA = a.cells[1].textContent;
-                const nameB = b.cells[1].textContent;
-                return nameA.localeCompare(nameB);
+        rows.forEach(row => {
+            if (row.cells.length < 7) return; // Skip if not a user row
+            
+            const name = row.cells[1].textContent.toLowerCase();
+            const email = row.cells[2].textContent.toLowerCase();
+            const phone = row.cells[3].textContent.toLowerCase();
+            
+            // Xác định role thực tế dựa vào class của badge
+            let roleValue = '';
+            const badge = row.querySelector('.badge');
+            if (badge) {
+                if (badge.classList.contains('role-admin')) roleValue = 'admin';
+                else if (badge.classList.contains('role-vet')) roleValue = 'vet';
+                else if (badge.classList.contains('role-staff')) roleValue = 'staff';
+            }
+            
+            const matchesSearch = name.includes(searchTerm) || email.includes(searchTerm) || phone.includes(searchTerm);
+            const matchesRole = roleFilter === '' || roleValue === roleFilter;
+            
+            if (matchesSearch && matchesRole) {
+                row.style.display = '';
+            } else {
+                row.style.display = 'none';
             }
         });
+    });
+
+    // JavaScript cho Pet Management
+    // Add Pet Form Handler
+    document.getElementById('addPetForm').addEventListener('submit', async function(e) {
+        e.preventDefault();
         
-        // Remove existing rows
-        rows.forEach(row => row.remove());
+        const formData = new FormData(this);
+        const petData = Object.fromEntries(formData.entries());
         
-        // Add sorted rows
-        rows.forEach(row => tbody.appendChild(row));
+        try {
+            const response = await fetch('/admin/users/pets/add', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(petData)
+            });
+            
+            const result = await response.json();
+            
+            if (result.success) {
+                alert('Thêm thú cưng thành công!');
+                window.location.reload();
+            } else {
+                alert('Lỗi: ' + result.message);
+            }
+        } catch (error) {
+            console.error('Error adding pet:', error);
+            alert('Có lỗi xảy ra khi thêm thú cưng');
+        }
+    });
+
+    // Edit Pet Modal
+    document.querySelectorAll('.edit-pet-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+            document.getElementById('editPetId').value = this.getAttribute('data-id');
+            document.getElementById('editPetName').value = this.getAttribute('data-name');
+            document.getElementById('editPetType').value = this.getAttribute('data-type');
+            document.getElementById('editPetBreed').value = this.getAttribute('data-breed');
+            document.getElementById('editPetAge').value = this.getAttribute('data-age');
+            document.getElementById('editPetWeight').value = this.getAttribute('data-weight');
+            document.getElementById('editPetGender').value = this.getAttribute('data-gender');
+            document.getElementById('editOwnerName').value = this.getAttribute('data-owner-name');
+            document.getElementById('editOwnerPhone').value = this.getAttribute('data-owner-phone');
+            document.getElementById('editOwnerEmail').value = this.getAttribute('data-owner-email');
+            
+            const editModal = new bootstrap.Modal(document.getElementById('editPetModal'));
+            editModal.show();
+        });
+    });
+
+    // Delete Pet Modal
+    document.querySelectorAll('.delete-pet-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+            const id = this.getAttribute('data-id');
+            const name = this.getAttribute('data-name');
+            
+            document.getElementById('deletePetId').value = id;
+            document.getElementById('deletePetName').textContent = name;
+            
+            const deleteModal = new bootstrap.Modal(document.getElementById('deletePetModal'));
+            deleteModal.show();
+        });
+    });
+
+    // Filter Pets
+    document.getElementById('filterPetsBtn').addEventListener('click', function() {
+        const searchTerm = document.getElementById('searchPets').value.toLowerCase();
+        const typeFilter = document.getElementById('typeFilter').value;
+        const petRows = document.querySelectorAll('.pet-row');
+        
+        petRows.forEach(row => {
+            const name = row.getAttribute('data-name');
+            const type = row.getAttribute('data-type');
+            const owner = row.getAttribute('data-owner');
+            
+            const matchesSearch = name.includes(searchTerm) || owner.includes(searchTerm);
+            const matchesType = typeFilter === '' || type === typeFilter;
+            
+            row.style.display = (matchesSearch && matchesType) ? '' : 'none';
+        });
     });
 </script>
 </body>
