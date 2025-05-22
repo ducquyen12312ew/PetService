@@ -211,7 +211,53 @@ const AppointmentSchema = new mongoose.Schema({
         default: Date.now
     }
 });
+const ShopInformationSchema = new mongoose.Schema({
+    shopName: {
+        type: String,
+        required: true,
+        default: "Pet Care Center"
+    },
+    address: {
+        type: String,
+        required: true
+    },
+    phone: {
+        type: String,
+        required: true
+    },
+    email: {
+        type: String,
+        required: true
+    },
+    description: {
+        type: String
+    },
+    workingHours: {
+        monday: { open: String, close: String },
+        tuesday: { open: String, close: String },
+        wednesday: { open: String, close: String },
+        thursday: { open: String, close: String },
+        friday: { open: String, close: String },
+        saturday: { open: String, close: String },
+        sunday: { open: String, close: String }
+    },
+    services: [String],
+    socialMedia: {
+        facebook: String,
+        instagram: String,
+        website: String
+    },
+    updatedAt: {
+        type: Date,
+        default: Date.now
+    },
+    updatedBy: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'users'
+    }
+});
 
+const ShopInformationCollection = mongoose.model("shopInformation", ShopInformationSchema);
 const UserCollection = mongoose.model("users", UserSchema);
 const PetCollection = mongoose.model("pets", PetSchema);
 const HealthRecordCollection = mongoose.model("healthRecords", HealthRecordSchema);
@@ -225,5 +271,6 @@ module.exports = {
     HealthRecordCollection, 
     MedicalRecordCollection, 
     PrescriptionCollection, 
-    AppointmentCollection 
+    AppointmentCollection,
+    ShopInformationCollection 
 };

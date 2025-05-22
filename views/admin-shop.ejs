@@ -1,0 +1,346 @@
+<!-- views/admin-shop.ejs -->
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quản lý thông tin shop - Admin</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body {
+            background-color: #ffffff;
+            color: #333;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        .admin-sidebar {
+            background-color: #343a40;
+            color: #fff;
+            min-height: 100vh;
+            padding-top: 15px;
+        }
+        .admin-sidebar .nav-link {
+            color: rgba(255, 255, 255, 0.75);
+            padding: 10px 20px;
+            border-radius: 0;
+            margin-bottom: 5px;
+        }
+        .admin-sidebar .nav-link:hover, .admin-sidebar .nav-link.active {
+            color: #fff;
+            background-color: rgba(255, 255, 255, 0.1);
+        }
+        .admin-sidebar .nav-link i {
+            margin-right: 10px;
+            width: 20px;
+            text-align: center;
+        }
+        .content-wrapper {
+            padding: 20px;
+        }
+        .shop-form-card {
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            padding: 25px;
+            margin-bottom: 20px;
+        }
+        .form-section {
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid #eee;
+        }
+        .form-section:last-child {
+            border-bottom: none;
+        }
+        .section-title {
+            font-weight: 600;
+            font-size: 18px;
+            margin-bottom: 15px;
+            color: #333;
+        }
+        .btn-yellow {
+            background-color: #f7c800;
+            color: white;
+            border: none;
+        }
+        .btn-yellow:hover {
+            background-color: #e6b800;
+            color: white;
+        }
+        .time-inputs {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+        .time-inputs input {
+            flex: 1;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container-fluid">
+    <div class="row">
+        <!-- Sidebar -->
+        <div class="col-md-3 col-lg-2 d-md-block admin-sidebar collapse">
+            <div class="text-center mb-4 pt-3">
+                <i class="fas fa-user-shield fa-3x mb-2"></i>
+                <h5><%= user.name %></h5>
+                <small>Administrator</small>
+            </div>
+            <hr>
+            <ul class="nav flex-column">
+                <li class="nav-item">
+                    <a class="nav-link" href="/admin/dashboard">
+                        <i class="fas fa-tachometer-alt"></i> Dashboard
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="/admin/users">
+                        <i class="fas fa-users"></i> Quản lý tài khoản
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="/admin/appointments">
+                        <i class="fas fa-calendar-check"></i> Lịch hẹn
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link active" href="/admin/shop">
+                        <i class="fas fa-store"></i> Thông tin shop
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="/logout">
+                        <i class="fas fa-sign-out-alt"></i> Đăng xuất
+                    </a>
+                </li>
+            </ul>
+        </div>
+
+        <!-- Main Content -->
+        <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4 content-wrapper">
+            <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+                <h1 class="h2">Quản lý thông tin shop</h1>
+                <div class="btn-toolbar mb-2 mb-md-0">
+                    <button type="button" class="btn btn-outline-secondary me-2" onclick="location.reload()">
+                        <i class="fas fa-sync-alt me-1"></i> Làm mới
+                    </button>
+                </div>
+            </div>
+
+            <!-- Success/Error Messages -->
+            <% if (typeof query !== 'undefined') { %>
+                <% if (query.success) { %>
+                    <div class="alert alert-success alert-dismissible fade show" role="alert">
+                        <i class="fas fa-check-circle me-2"></i> Cập nhật thông tin shop thành công!
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                <% } else if (query.error) { %>
+                    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                        <i class="fas fa-exclamation-circle me-2"></i> Có lỗi xảy ra khi cập nhật thông tin shop!
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                <% } %>
+            <% } %>
+
+            <!-- Shop Information Form -->
+            <div class="shop-form-card">
+                <form action="/admin/shop/update" method="POST">
+                    <!-- Basic Information -->
+                    <div class="form-section">
+                        <h4 class="section-title"><i class="fas fa-info-circle me-2"></i> Thông tin cơ bản</h4>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="shopName" class="form-label">Tên shop</label>
+                                <input type="text" class="form-control" id="shopName" name="shopName" 
+                                       value="<%= shopInfo.shopName %>" required>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="email" class="form-label">Email</label>
+                                <input type="email" class="form-control" id="email" name="email" 
+                                       value="<%= shopInfo.email %>" required>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="phone" class="form-label">Số điện thoại</label>
+                                <input type="text" class="form-control" id="phone" name="phone" 
+                                       value="<%= shopInfo.phone %>" required>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="address" class="form-label">Địa chỉ</label>
+                                <input type="text" class="form-control" id="address" name="address" 
+                                       value="<%= shopInfo.address %>" required>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label for="description" class="form-label">Mô tả</label>
+                            <textarea class="form-control" id="description" name="description" rows="3"><%= shopInfo.description %></textarea>
+                        </div>
+                    </div>
+
+                    <!-- Working Hours -->
+                    <div class="form-section">
+                        <h4 class="section-title"><i class="fas fa-clock me-2"></i> Giờ làm việc</h4>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Thứ 2</label>
+                                <div class="time-inputs">
+                                    <input type="time" class="form-control" name="mondayOpen" 
+                                           value="<%= shopInfo.workingHours.monday.open %>">
+                                    <span>-</span>
+                                    <input type="time" class="form-control" name="mondayClose" 
+                                           value="<%= shopInfo.workingHours.monday.close %>">
+                                </div>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Thứ 3</label>
+                                <div class="time-inputs">
+                                    <input type="time" class="form-control" name="tuesdayOpen" 
+                                           value="<%= shopInfo.workingHours.tuesday.open %>">
+                                    <span>-</span>
+                                    <input type="time" class="form-control" name="tuesdayClose" 
+                                           value="<%= shopInfo.workingHours.tuesday.close %>">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Thứ 4</label>
+                                <div class="time-inputs">
+                                    <input type="time" class="form-control" name="wednesdayOpen" 
+                                           value="<%= shopInfo.workingHours.wednesday.open %>">
+                                    <span>-</span>
+                                    <input type="time" class="form-control" name="wednesdayClose" 
+                                           value="<%= shopInfo.workingHours.wednesday.close %>">
+                                </div>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Thứ 5</label>
+                                <div class="time-inputs">
+                                    <input type="time" class="form-control" name="thursdayOpen" 
+                                           value="<%= shopInfo.workingHours.thursday.open %>">
+                                    <span>-</span>
+                                    <input type="time" class="form-control" name="thursdayClose" 
+                                           value="<%= shopInfo.workingHours.thursday.close %>">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Thứ 6</label>
+                                <div class="time-inputs">
+                                    <input type="time" class="form-control" name="fridayOpen" 
+                                           value="<%= shopInfo.workingHours.friday.open %>">
+                                    <span>-</span>
+                                    <input type="time" class="form-control" name="fridayClose" 
+                                           value="<%= shopInfo.workingHours.friday.close %>">
+                                </div>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Thứ 7</label>
+                                <div class="time-inputs">
+                                    <input type="time" class="form-control" name="saturdayOpen" 
+                                           value="<%= shopInfo.workingHours.saturday.open %>">
+                                    <span>-</span>
+                                    <input type="time" class="form-control" name="saturdayClose" 
+                                           value="<%= shopInfo.workingHours.saturday.close %>">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Chủ nhật</label>
+                                <div class="time-inputs">
+                                    <input type="time" class="form-control" name="sundayOpen" 
+                                           value="<%= shopInfo.workingHours.sunday.open %>">
+                                    <span>-</span>
+                                    <input type="time" class="form-control" name="sundayClose" 
+                                           value="<%= shopInfo.workingHours.sunday.close %>">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Services -->
+                    <div class="form-section">
+                        <h4 class="section-title"><i class="fas fa-concierge-bell me-2"></i> Dịch vụ</h4>
+                        <div class="row">
+                            <div class="col-12">
+                                <div class="form-check mb-2">
+                                    <input class="form-check-input" type="checkbox" name="services" 
+                                           value="Khám sức khỏe" id="service1"
+                                           <%= shopInfo.services.includes('Khám sức khỏe') ? 'checked' : '' %>>
+                                    <label class="form-check-label" for="service1">
+                                        Khám sức khỏe
+                                    </label>
+                                </div>
+                                <div class="form-check mb-2">
+                                    <input class="form-check-input" type="checkbox" name="services" 
+                                           value="Tắm" id="service2"
+                                           <%= shopInfo.services.includes('Tắm') ? 'checked' : '' %>>
+                                    <label class="form-check-label" for="service2">
+                                        Tắm
+                                    </label>
+                                </div>
+                                <div class="form-check mb-2">
+                                    <input class="form-check-input" type="checkbox" name="services" 
+                                           value="Cắt tỉa lông" id="service3"
+                                           <%= shopInfo.services.includes('Cắt tỉa lông') ? 'checked' : '' %>>
+                                    <label class="form-check-label" for="service3">
+                                        Cắt tỉa lông
+                                    </label>
+                                </div>
+                                <div class="form-check mb-2">
+                                    <input class="form-check-input" type="checkbox" name="services" 
+                                           value="Lưu trú" id="service4"
+                                           <%= shopInfo.services.includes('Lưu trú') ? 'checked' : '' %>>
+                                    <label class="form-check-label" for="service4">
+                                        Lưu trú
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Social Media -->
+                    <div class="form-section">
+                        <h4 class="section-title"><i class="fas fa-share-alt me-2"></i> Mạng xã hội</h4>
+                        <div class="row">
+                            <div class="col-md-4 mb-3">
+                                <label for="facebook" class="form-label">Facebook</label>
+                                <input type="url" class="form-control" id="facebook" name="facebook" 
+                                       value="<%= shopInfo.socialMedia.facebook %>" placeholder="https://facebook.com/...">
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label for="instagram" class="form-label">Instagram</label>
+                                <input type="url" class="form-control" id="instagram" name="instagram" 
+                                       value="<%= shopInfo.socialMedia.instagram %>" placeholder="https://instagram.com/...">
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label for="website" class="form-label">Website</label>
+                                <input type="url" class="form-control" id="website" name="website" 
+                                       value="<%= shopInfo.socialMedia.website %>" placeholder="https://...">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Submit Button -->
+                    <div class="text-end">
+                        <button type="button" class="btn btn-outline-secondary me-2" onclick="history.back()">
+                            <i class="fas fa-times me-1"></i> Hủy
+                        </button>
+                        <button type="submit" class="btn btn-yellow">
+                            <i class="fas fa-save me-1"></i> Lưu thông tin
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </main>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

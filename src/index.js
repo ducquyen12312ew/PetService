@@ -8,7 +8,8 @@ const {
     HealthRecordCollection, 
     MedicalRecordCollection, 
     PrescriptionCollection, 
-    AppointmentCollection 
+    AppointmentCollection,
+    ShopInformationCollection
 } = require('./config');
 
 const app = express();
@@ -1366,6 +1367,240 @@ app.post("/admin/appointments/assign", async (req, res) => {
         res.status(500).send("Error assigning vet to appointment");
     }
 });
+
+app.get("/admin/shop", async (req, res) => {
+    if (req.session.role !== 'admin') {
+        return res.redirect("/admin-secret");
+    }
+    
+    try {
+        let shopInfo = await ShopInformationCollection.findOne();
+        
+        // Nếu chưa có thông tin shop, tạo mới với dữ liệu mặc định
+        if (!shopInfo) {
+            shopInfo = await ShopInformationCollection.create({
+                shopName: "Pet Care Center",
+                address: "123 Đường ABC, Quận XYZ, TP.HCM",
+                phone: "0982-495-562",
+                email: "phanquyenkols.booking@gmail.com",
+                description: "Chăm sóc tốt nhất cho người bạn thân yêu của bạn",
+                workingHours: {
+                    monday: { open: "08:00", close: "18:00" },
+                    tuesday: { open: "08:00", close: "18:00" },
+                    wednesday: { open: "08:00", close: "18:00" },
+                    thursday: { open: "08:00", close: "18:00" },
+                    friday: { open: "08:00", close: "18:00" },
+                    saturday: { open: "09:00", close: "17:00" },
+                    sunday: { open: "09:00", close: "17:00" }
+                },
+                services: ["Khám sức khỏe", "Tắm", "Cắt tỉa lông", "Lưu trú"],
+                socialMedia: {
+                    facebook: "",
+                    instagram: "",
+                    website: ""
+                }
+            });
+        }
+        
+        res.render("admin-shop", { shopInfo });
+    } catch (error) {
+        console.error("Error fetching shop info:", error);
+        res.status(500).send("Error loading shop information");
+    }
+});
+
+app.post("/admin/shop/update", async (req, res) => {
+    if (req.session.role !== 'admin') {
+        return res.redirect("/admin-secret");
+    }
+    
+    try {
+        const {
+            shopName, address, phone, email, description,
+            mondayOpen, mondayClose, tuesdayOpen, tuesdayClose,
+            wednesdayOpen, wednesdayClose, thursdayOpen, thursdayClose,
+            fridayOpen, fridayClose, saturdayOpen, saturdayClose,
+            sundayOpen, sundayClose,
+            services, facebook, instagram, website
+        } = req.body;
+
+        const updateData = {
+            shopName,
+            address,
+            phone,
+            email,
+            description,
+            workingHours: {
+                monday: { open: mondayOpen, close: mondayClose },
+                tuesday: { open: tuesdayOpen, close: tuesdayClose },
+                wednesday: { open: wednesdayOpen, close: wednesdayClose },
+                thursday: { open: thursdayOpen, close: thursdayClose },
+                friday: { open: fridayOpen, close: fridayClose },
+                saturday: { open: saturdayOpen, close: saturdayClose },
+                sunday: { open: sundayOpen, close: sundayClose }
+            },
+            services: Array.isArray(services) ? services : [services],
+            socialMedia: {
+                facebook,
+                instagram,
+                website
+            },
+            updatedAt: new Date(),
+            updatedBy: req.session.userId
+        };
+
+        await ShopInformationCollection.findOneAndUpdate({}, updateData, { 
+            upsert: true, 
+            new: true 
+        });
+
+        res.redirect("/admin/shop?success=1");
+    } catch (error) {
+        console.error("Error updating shop info:", error);
+        res.redirect("/admin/shop?error=1");
+    }
+});
+
+app.get("/admin/pets/:id", async (req, res) => {
+    if (req.session.role !== 'admin') {
+        return res.redirect("/admin-secret");
+    }
+    
+    try {
+        const pet = await PetCollection.findById(req.params.id);
+        
+        if (!pet) {
+            return res.status(404).send("Pet not found");
+        }
+
+        // Lấy thông tin bổ sung về thú cưng
+        const healthRecords = await HealthRecordCollection.find({ 
+            pet: req.params.id 
+        }).sort({ date: -1 }).populate('veterinarian', 'name');
+
+        const medicalRecords = await MedicalRecordCollection.find({ 
+            pet: req.params.id 
+        }).sort({ date: -1 }).populate('veterinarian', 'name');
+
+        const prescriptions = await PrescriptionCollection.find({ 
+            pet: req.params.id 
+        }).sort({ date: -1 }).populate('veterinarian', 'name');
+
+        const appointments = await AppointmentCollection.find({
+            petName: pet.name,
+            customerPhone: pet.ownerPhone
+        }).sort({ date: -1 });
+        
+        res.render("admin-pet-detail", { 
+            pet,
+            healthRecords,
+            medicalRecords,
+            prescriptions,
+            appointments
+        });
+    } catch (error) {
+        console.error("Error fetching pet details:", error);
+        res.status(500).send("Error loading pet details");
+    }
+});
+
+// Route để sửa thông tin thú cưng
+app.get("/admin/pets/:id/edit", async (req, res) => {
+    if (req.session.role !== 'admin') {
+        return res.redirect("/admin-secret");
+    }
+    
+    try {
+        const pet = await PetCollection.findById(req.params.id);
+        
+        if (!pet) {
+            return res.status(404).send("Pet not found");
+        }
+        
+        res.render("admin-pet-edit", { pet });
+    } catch (error) {
+        console.error("Error:", error);
+        res.status(500).send("Error loading edit form");
+    }
+});
+
+// Route để cập nhật thông tin thú cưng
+app.post("/admin/pets/:id/update", async (req, res) => {
+    if (req.session.role !== 'admin') {
+        return res.redirect("/admin-secret");
+    }
+    
+    try {
+        const { name, type, breed, age, weight, gender, ownerName, ownerPhone, ownerEmail } = req.body;
+        
+        await PetCollection.findByIdAndUpdate(req.params.id, {
+            name,
+            type,
+            breed,
+            age: age ? parseInt(age) : undefined,
+            weight: weight ? parseFloat(weight) : undefined,
+            gender,
+            ownerName,
+            ownerPhone,
+            ownerEmail
+        });
+        
+        res.redirect(`/admin/pets/${req.params.id}?success=1`);
+    } catch (error) {
+        console.error("Error updating pet:", error);
+        res.redirect(`/admin/pets/${req.params.id}/edit?error=1`);
+    }
+});
+
+// Route để xóa thú cưng
+app.post("/admin/pets/:id/delete", async (req, res) => {
+    if (req.session.role !== 'admin') {
+        return res.redirect("/admin-secret");
+    }
+    
+    try {
+        // Xóa tất cả dữ liệu liên quan đến thú cưng
+        await HealthRecordCollection.deleteMany({ pet: req.params.id });
+        await MedicalRecordCollection.deleteMany({ pet: req.params.id });
+        await PrescriptionCollection.deleteMany({ pet: req.params.id });
+        
+        // Xóa thú cưng
+        await PetCollection.findByIdAndDelete(req.params.id);
+        
+        res.status(200).json({ success: true });
+    } catch (error) {
+        console.error("Error deleting pet:", error);
+        res.status(500).json({ success: false });
+    }
+});
+
+async function createDefaultShopInfo() {
+    try {
+        const shopExists = await ShopInformationCollection.findOne();
+        if (!shopExists) {
+            await ShopInformationCollection.create({
+                shopName: "Pet Care Center",
+                address: "123 Đường ABC, Quận XYZ, TP.HCM",
+                phone: "0982-495-562",
+                email: "phanquyenkols.booking@gmail.com",
+                description: "Chăm sóc tốt nhất cho người bạn thân yêu của bạn",
+                workingHours: {
+                    monday: { open: "08:00", close: "18:00" },
+                    tuesday: { open: "08:00", close: "18:00" },
+                    wednesday: { open: "08:00", close: "18:00" },
+                    thursday: { open: "08:00", close: "18:00" },
+                    friday: { open: "08:00", close: "18:00" },
+                    saturday: { open: "09:00", close: "17:00" },
+                    sunday: { open: "09:00", close: "17:00" }
+                },
+                services: ["Khám sức khỏe", "Tắm", "Cắt tỉa lông", "Lưu trú"]
+            });
+            console.log('Default shop information created');
+        }
+    } catch (error) {
+        console.error('Error creating shop info:', error);
+    }
+}
 
 const port = 5000;
 app.listen(port, () => {

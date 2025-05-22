@@ -1,0 +1,467 @@
+<!-- views/admin-pets.ejs -->
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quản lý thú cưng - Admin</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body {
+            background-color: #ffffff;
+            color: #333;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        .admin-sidebar {
+            background-color: #343a40;
+            color: #fff;
+            min-height: 100vh;
+            padding-top: 15px;
+        }
+        .admin-sidebar .nav-link {
+            color: rgba(255, 255, 255, 0.75);
+            padding: 10px 20px;
+            border-radius: 0;
+            margin-bottom: 5px;
+        }
+        .admin-sidebar .nav-link:hover, .admin-sidebar .nav-link.active {
+            color: #fff;
+            background-color: rgba(255, 255, 255, 0.1);
+        }
+        .admin-sidebar .nav-link i {
+            margin-right: 10px;
+            width: 20px;
+            text-align: center;
+        }
+        .content-wrapper {
+            padding: 20px;
+        }
+        .pet-card {
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            margin-bottom: 20px;
+            transition: transform 0.3s;
+            background-color: white;
+        }
+        .pet-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+        .pet-header {
+            background-color: #f7c800;
+            color: white;
+            padding: 15px;
+            position: relative;
+        }
+        .pet-name {
+            font-weight: bold;
+            font-size: 1.2rem;
+            margin-bottom: 5px;
+        }
+        .pet-type {
+            font-size: 0.9rem;
+            opacity: 0.9;
+        }
+        .pet-icon {
+            position: absolute;
+            right: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 30px;
+        }
+        .pet-detail {
+            padding: 15px;
+        }
+        .pet-info {
+            margin-bottom: 10px;
+        }
+        .pet-info .label {
+            font-weight: 600;
+            color: #555;
+        }
+        .pet-actions {
+            padding: 10px 15px;
+            background-color: #f9f9f9;
+            border-top: 1px solid #eee;
+        }
+        .btn-yellow {
+            background-color: #f7c800;
+            color: white;
+            border: none;
+        }
+        .btn-yellow:hover {
+            background-color: #e6b800;
+            color: white;
+        }
+        .search-bar {
+            margin-bottom: 20px;
+        }
+        .filter-card {
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        .table-hover tbody tr {
+            transition: background-color 0.3s;
+        }
+        .table-hover tbody tr:hover {
+            background-color: rgba(247, 200, 0, 0.1);
+        }
+    </style>
+</head>
+<body>
+
+<div class="container-fluid">
+    <div class="row">
+        <!-- Sidebar -->
+        <div class="col-md-3 col-lg-2 d-md-block admin-sidebar collapse">
+            <div class="text-center mb-4 pt-3">
+                <i class="fas fa-user-shield fa-3x mb-2"></i>
+                <h5><%= user.name %></h5>
+                <small>Administrator</small>
+            </div>
+            <hr>
+            <ul class="nav flex-column">
+                <li class="nav-item">
+                    <a class="nav-link" href="/admin/dashboard">
+                        <i class="fas fa-tachometer-alt"></i> Dashboard
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="/admin/users">
+                        <i class="fas fa-users"></i> Quản lý tài khoản
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link active" href="/admin/pets">
+                        <i class="fas fa-paw"></i> Thú cưng
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="/admin/appointments">
+                        <i class="fas fa-calendar-check"></i> Lịch hẹn
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="/logout">
+                        <i class="fas fa-sign-out-alt"></i> Đăng xuất
+                    </a>
+                </li>
+            </ul>
+        </div>
+
+        <!-- Main Content -->
+        <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4 content-wrapper">
+            <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+                <h1 class="h2">Danh sách thú cưng</h1>
+                <div class="btn-toolbar mb-2 mb-md-0">
+                    <div class="btn-group me-2">
+                        <button type="button" class="btn btn-sm btn-outline-secondary">
+                            <i class="fas fa-download me-1"></i> Xuất Excel
+                        </button>
+                        <button type="button" class="btn btn-sm btn-outline-secondary">
+                            <i class="fas fa-print me-1"></i> In danh sách
+                        </button>
+                    </div>
+                    <button type="button" class="btn btn-sm btn-yellow" data-bs-toggle="modal" data-bs-target="#addPetModal">
+                        <i class="fas fa-plus me-1"></i> Thêm thú cưng mới
+                    </button>
+                </div>
+            </div>
+            
+            <!-- Search & Filter -->
+            <div class="filter-card">
+                <div class="row">
+                    <div class="col-md-4 mb-2">
+                        <input type="text" class="form-control" id="searchInput" placeholder="Tìm kiếm theo tên, chủ nhân...">
+                    </div>
+                    <div class="col-md-3 mb-2">
+                        <select class="form-select" id="typeFilter">
+                            <option value="">Tất cả loại</option>
+                            <option value="dog">Chó</option>
+                            <option value="cat">Mèo</option>
+                            <option value="bird">Chim</option>
+                            <option value="rabbit">Thỏ</option>
+                            <option value="other">Khác</option>
+                        </select>
+                    </div>
+                    <div class="col-md-3 mb-2">
+                        <select class="form-select" id="sortOrder">
+                            <option value="newest">Mới nhất</option>
+                            <option value="oldest">Cũ nhất</option>
+                            <option value="name">Theo tên</option>
+                            <option value="owner">Theo chủ nhân</option>
+                        </select>
+                    </div>
+                    <div class="col-md-2 mb-2">
+                        <button type="button" class="btn btn-primary w-100" id="filterBtn">
+                            <i class="fas fa-search me-1"></i> Tìm kiếm
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- View Toggle -->
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <div>
+                    <small class="text-muted">Tổng số: <%= pets.length %> thú cưng</small>
+                </div>
+                <div class="btn-group" role="group">
+                    <button type="button" class="btn btn-outline-secondary active" id="gridViewBtn">
+                        <i class="fas fa-th-large"></i> Lưới
+                    </button>
+                    <button type="button" class="btn btn-outline-secondary" id="tableViewBtn">
+                        <i class="fas fa-list"></i> Danh sách
+                    </button>
+                </div>
+            </div>
+
+            <!-- Grid View -->
+            <div id="gridView">
+                <div class="row">
+                    <% if (pets && pets.length > 0) { %>
+                        <% pets.forEach(pet => { %>
+                            <div class="col-md-6 col-lg-4 pet-item" data-name="<%= pet.name.toLowerCase() %>" data-owner="<%= pet.ownerName.toLowerCase() %>" data-type="<%= pet.type.toLowerCase() %>">
+                                <div class="pet-card">
+                                    <div class="pet-header">
+                                        <div class="pet-name"><%= pet.name %></div>
+                                        <div class="pet-type"><%= pet.type %> - <%= pet.breed || 'Không xác định' %></div>
+                                        <div class="pet-icon">
+                                            <% if (pet.type.toLowerCase() === 'dog') { %>
+                                                <i class="fas fa-dog"></i>
+                                            <% } else if (pet.type.toLowerCase() === 'cat') { %>
+                                                <i class="fas fa-cat"></i>
+                                            <% } else if (pet.type.toLowerCase() === 'bird') { %>
+                                                <i class="fas fa-dove"></i>
+                                            <% } else if (pet.type.toLowerCase() === 'rabbit') { %>
+                                                <i class="fas fa-rabbit"></i>
+                                            <% } else { %>
+                                                <i class="fas fa-paw"></i>
+                                            <% } %>
+                                        </div>
+                                    </div>
+                                    <div class="pet-detail">
+                                        <div class="pet-info">
+                                            <span class="label">Chủ nhân:</span> <%= pet.ownerName %>
+                                        </div>
+                                        <div class="pet-info">
+                                            <span class="label">Liên hệ:</span> <%= pet.ownerPhone %>
+                                        </div>
+                                        <% if (pet.ownerEmail) { %>
+                                            <div class="pet-info">
+                                                <span class="label">Email:</span> <%= pet.ownerEmail %>
+                                            </div>
+                                        <% } %>
+                                        <div class="pet-info">
+                                            <span class="label">Tuổi:</span> <%= pet.age || 'Chưa xác định' %>
+                                        </div>
+                                        <div class="pet-info">
+                                            <span class="label">Cân nặng:</span> <%= pet.weight ? pet.weight + ' kg' : 'Chưa xác định' %>
+                                        </div>
+                                        <div class="pet-info">
+                                            <span class="label">Ngày đăng ký:</span> <%= new Date(pet.registeredAt).toLocaleDateString('vi-VN') %>
+                                        </div>
+                                    </div>
+                                    <div class="pet-actions">
+                                        <button class="btn btn-sm btn-outline-primary me-1" onclick="viewPetDetails('<%= pet._id %>')">
+                                            <i class="fas fa-eye me-1"></i> Chi tiết
+                                        </button>
+                                        <button class="btn btn-sm btn-outline-warning me-1" onclick="editPet('<%= pet._id %>')">
+                                            <i class="fas fa-edit me-1"></i> Sửa
+                                        </button>
+                                        <button class="btn btn-sm btn-outline-danger" onclick="deletePet('<%= pet._id %>', '<%= pet.name %>')">
+                                            <i class="fas fa-trash me-1"></i> Xóa
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        <% }) %>
+                    <% } else { %>
+                        <div class="col-12">
+                            <div class="alert alert-info text-center">
+                                <i class="fas fa-info-circle me-2"></i> Chưa có thú cưng nào được đăng ký trong hệ thống.
+                            </div>
+                        </div>
+                    <% } %>
+                </div>
+            </div>
+
+            <!-- Table View -->
+            <div id="tableView" style="display: none;">
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>STT</th>
+                                <th>Tên</th>
+                                <th>Loại</th>
+                                <th>Giống</th>
+                                <th>Chủ nhân</th>
+                                <th>Liên hệ</th>
+                                <th>Ngày đăng ký</th>
+                                <th>Thao tác</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <% if (pets && pets.length > 0) { %>
+                                <% pets.forEach((pet, index) => { %>
+                                    <tr class="pet-row" data-name="<%= pet.name.toLowerCase() %>" data-owner="<%= pet.ownerName.toLowerCase() %>" data-type="<%= pet.type.toLowerCase() %>">
+                                        <td><%= index + 1 %></td>
+                                        <td><%= pet.name %></td>
+                                        <td>
+                                            <% if (pet.type.toLowerCase() === 'dog') { %>
+                                                <i class="fas fa-dog me-1"></i> Chó
+                                            <% } else if (pet.type.toLowerCase() === 'cat') { %>
+                                                <i class="fas fa-cat me-1"></i> Mèo
+                                            <% } else if (pet.type.toLowerCase() === 'bird') { %>
+                                                <i class="fas fa-dove me-1"></i> Chim
+                                            <% } else if (pet.type.toLowerCase() === 'rabbit') { %>
+                                                <i class="fas fa-rabbit me-1"></i> Thỏ
+                                            <% } else { %>
+                                                <i class="fas fa-paw me-1"></i> <%= pet.type %>
+                                            <% } %>
+                                        </td>
+                                        <td><%= pet.breed || 'Không xác định' %></td>
+                                        <td><%= pet.ownerName %></td>
+                                        <td><%= pet.ownerPhone %></td>
+                                        <td><%= new Date(pet.registeredAt).toLocaleDateString('vi-VN') %></td>
+                                        <td>
+                                            <button class="btn btn-sm btn-outline-primary me-1" onclick="viewPetDetails('<%= pet._id %>')">
+                                                <i class="fas fa-eye"></i>
+                                            </button>
+                                            <button class="btn btn-sm btn-outline-warning me-1" onclick="editPet('<%= pet._id %>')">
+                                                <i class="fas fa-edit"></i>
+                                            </button>
+                                            <button class="btn btn-sm btn-outline-danger" onclick="deletePet('<%= pet._id %>', '<%= pet.name %>')">
+                                                <i class="fas fa-trash"></i>
+                                            </button>
+                                        </td>
+                                    </tr>
+                                <% }) %>
+                            <% } else { %>
+                                <tr>
+                                    <td colspan="8" class="text-center">Chưa có thú cưng nào được đăng ký.</td>
+                                </tr>
+                            <% } %>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </main>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+    // View toggle functionality
+    document.getElementById('gridViewBtn').addEventListener('click', function() {
+        document.getElementById('gridView').style.display = 'block';
+        document.getElementById('tableView').style.display = 'none';
+        this.classList.add('active');
+        document.getElementById('tableViewBtn').classList.remove('active');
+    });
+
+    document.getElementById('tableViewBtn').addEventListener('click', function() {
+        document.getElementById('gridView').style.display = 'none';
+        document.getElementById('tableView').style.display = 'block';
+        this.classList.add('active');
+        document.getElementById('gridViewBtn').classList.remove('active');
+    });
+
+    // Filter functionality
+    document.getElementById('filterBtn').addEventListener('click', function() {
+        const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+        const typeFilter = document.getElementById('typeFilter').value;
+        
+        // Filter grid view
+        const petItems = document.querySelectorAll('.pet-item');
+        petItems.forEach(item => {
+            const name = item.getAttribute('data-name');
+            const owner = item.getAttribute('data-owner');
+            const type = item.getAttribute('data-type');
+            
+            const matchesSearch = name.includes(searchTerm) || owner.includes(searchTerm);
+            const matchesType = typeFilter === '' || type === typeFilter;
+            
+            if (matchesSearch && matchesType) {
+                item.style.display = 'block';
+            } else {
+                item.style.display = 'none';
+            }
+        });
+        
+        // Filter table view
+        const petRows = document.querySelectorAll('.pet-row');
+        petRows.forEach(row => {
+            const name = row.getAttribute('data-name');
+            const owner = row.getAttribute('data-owner');
+            const type = row.getAttribute('data-type');
+            
+            const matchesSearch = name.includes(searchTerm) || owner.includes(searchTerm);
+            const matchesType = typeFilter === '' || type === typeFilter;
+            
+            if (matchesSearch && matchesType) {
+                row.style.display = '';
+            } else {
+                row.style.display = 'none';
+            }
+        });
+    });
+
+    // Pet management functions
+    function viewPetDetails(petId) {
+        window.location.href = `/admin/pets/${petId}`;
+    }
+
+    function editPet(petId) {
+        window.location.href = `/admin/pets/${petId}/edit`;
+    }
+
+    function deletePet(petId, petName) {
+        if (confirm(`Bạn có chắc chắn muốn xóa thú cưng "${petName}"?`)) {
+            fetch(`/admin/pets/${petId}/delete`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            })
+            .then(response => {
+                if (response.ok) {
+                    location.reload();
+                } else {
+                    alert('Có lỗi xảy ra khi xóa thú cưng');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Có lỗi xảy ra khi xóa thú cưng');
+            });
+        }
+    }
+
+    // Sort functionality
+    document.getElementById('sortOrder').addEventListener('change', function() {
+        const sortOption = this.value;
+        
+        // Sort grid view
+        const gridContainer = document.querySelector('#gridView .row');
+        const petItems = Array.from(gridContainer.querySelectorAll('.pet-item'));
+        
+        petItems.sort((a, b) => {
+            if (sortOption === 'name') {
+                return a.getAttribute('data-name').localeCompare(b.getAttribute('data-name'));
+            } else if (sortOption === 'owner') {
+                return a.getAttribute('data-owner').localeCompare(b.getAttribute('data-owner'));
+            }
+            // For newest/oldest, we'd need additional data attributes with timestamps
+        });
+        
+        petItems.forEach(item => gridContainer.appendChild(item));
+    });
+</script>
+</body>
+</html>
