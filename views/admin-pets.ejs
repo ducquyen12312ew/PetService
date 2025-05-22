@@ -266,14 +266,6 @@
                                             <span class="label">Ngày đăng ký:</span> <%= new Date(pet.registeredAt).toLocaleDateString('vi-VN') %>
                                         </div>
                                     </div>
-                                    <div class="pet-actions">
-                                        <button class="btn btn-sm btn-outline-warning me-1" onclick="editPet('<%= pet._id %>')">
-                                            <i class="fas fa-edit me-1"></i> Sửa
-                                        </button>
-                                        <button class="btn btn-sm btn-outline-danger" onclick="deletePet('<%= pet._id %>', '<%= pet.name %>')">
-                                            <i class="fas fa-trash me-1"></i> Xóa
-                                        </button>
-                                    </div>
                                 </div>
                             </div>
                         <% }) %>
