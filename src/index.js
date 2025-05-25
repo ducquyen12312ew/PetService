@@ -1013,7 +1013,7 @@ async function createDefaultVet() {
         if (!adminExists) {
             await UserCollection.create({
                 name: 'admin',
-                password: 'admin123',
+                password: '123456789',
                 role: 'admin'
             });
             
@@ -1028,19 +1028,19 @@ async function createDefaultVet() {
 // Thêm vào hàm createDefaultVet hoặc chạy riêng
 async function createAdminAccount() {
     try {
-        const adminExists = await UserCollection.findOne({ email: 'admin@example.com' });
+        const adminExists = await UserCollection.findOne({ email: 'admin@gmail.com' });
         if (!adminExists) {
             await UserCollection.create({
                 name: 'admin',
-                password: 'admin123',
+                password: '123456789',
                 role: 'admin',
-                email: 'admin@example.com',
+                email: 'admin',
                 phone: '0123456789'
             });
             
-            console.log('Admin account with email admin@example.com created');
+            console.log('Admin account with email admin@gmail.com created');
         } else {
-            console.log('Admin account with email admin@example.com already exists');
+            console.log('Admin account with email admin@gmail.com already exists');
         }
     } catch (error) {
         console.error('Error creating admin account:', error);
