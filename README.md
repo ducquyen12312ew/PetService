@@ -1,4 +1,6 @@
-# Pet Service - By QuyenKOL
+# Hê thống chăm sóc thú cưng - GoPetBet 🎲🃏
+
+
 ```bash
 Videos and demo images are located in Project-Media.
 ```
